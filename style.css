@@ -1,0 +1,74 @@
+@import url("styles/header.css");
+
+:root{
+    --cor-primaria: #176B87;
+    --cor-secundaria:#213555;
+    --cor-texto-primaria:#EEEEEE;
+
+}
+
+* {
+    /* padding e margim geral da pagina */
+
+    margin: 0;
+    padding: 0;
+}
+
+
+body{
+   
+    /* box-sizing: border-box; */
+    background-color: var(--cor-primaria);
+    color: var(--cor-texto-primaria);
+}
+
+.apresentacao{
+    margin: 5%;
+   padding: 5% 5%;
+  
+   font-size: 1.5rem;
+   
+   /* flex-direction: row; */
+
+    /* align-items: center; */
+}
+.apresentacao__bill{
+    color: var(--cor-secundaria);
+}
+
+.lista{
+    display: flex;
+    flex-direction: column;
+    list-style-type: none;
+    
+
+}
+
+
+
+.caixa__individual{
+    padding: 10px 0px;
+    display: flex;
+    flex-direction: column;
+    border:  1px solid;
+    border-radius: 8px;
+    width: 100%; /* Use 100% para preencher a largura do contêiner pai */
+
+}
+.caixa__individual__label{
+    padding: 1em;
+}
+.caixa__cadastar{
+ 
+    color: var(--cor-texto-primaria);
+   
+
+    
+    /* border:  1px solid;
+    border-radius: 4px; */
+    padding: 0% 50%;
+    text-decoration: none;
+    margin-top: 10em;
+
+
+}

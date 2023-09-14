@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- https://colorhunt.co/ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="navegacao">
+            <img src="img/logo__small@2x.png" class="navegacao__logo">
+            <h2 class="navegacao_text">Seja bem Vindo. </h2>
+            <img src="img/Menu.svg" alt="">
+
+
+        </div>
+    </header>
+
+    <main class="apresentacao">
+        <section class="apresentacao__section">
+            <div>
+                <h1 class="apresentacao__bill">Bill Manager </h1>
+                <p>deixem-nos lhe ajudar.</p>
+
+            </div>
+
+
+
+
+            <ul class="lista">
+                <li>
+                    <label for="email" class="caixa__individual__label">Digite seu email</label>
+                    <input id="email" class="caixa__individual" type="text">
+                </li>
+
+                <li id="com_cadastro" style="display: none;">
+
+                    <label for="Senha" class="caixa__individual__label">Digite sua Senha</label>
+                    <input id="Senha" class="caixa__individual" type="text">
+
+                </li>
+                <li id="com_cadastro" style="display: none;"> <a class="caixa__cadastar" href="">acessar</a></li>
+
+                
+                <li id="sem_cadastro" style="display: none;"> <!-- para deixar ele oculto com style="display: none; -->
+                    <label for="nome" class="caixa__individual__label">Digite seu nome</label>
+                    <input id="nome" class="caixa__individual" type="text">
+                </li>
+                <li id="sem_cadastro" style="display: none;">
+                    <label for="cpf" class="caixa__individual__label">Digite seu Cpf:</label>
+                    <input id="cpf" class="caixa__individual" type="text">
+                </li id="sem_cadastro" style="display: none;">
+
+                <li id="sem_cadastro" style="display: none;">
+                    <label for="Senha" class="caixa__individual__label">Nova sua Senha</label>
+                    <input id="Senha" class="caixa__individual" type="text">
+                </li>
+
+                <li id="sem_cadastro" style="display: none;">
+                    <label for="Senha" class="caixa__individual__label">Repita sua Senha</label>
+                    <input id="Senha" class="caixa__individual" type="text">
+                </li>
+                <li id="sem_cadastro" style="display: none;">
+                    <a class="caixa__cadastar" href="">cadastrar</a>
+                </li>
+
+
+            </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </section>
+    </main>
+    <footer></footer>
+    <script>
+
+
+        const emailInput = document.getElementById("email");
+        const com_cadastro = document.getElementById("com_cadastro");
+        const sem_cadastro = document.getElementById("sem_cadastro");
+
+        // emailInput.addEventListener("input", function () {
+        emailInput.addEventListener("keydown", function (event) {  //coloquei um ouvinte ouvindo o input do email
+
+            if (event.key === "Enter") {// esperando ser acionada a tecla enter
+
+                const emailValue = emailInput.value.toLowerCase();
+
+
+                if (emailValue.includes("@")) {
+
+                    com_cadastro.style.display = "block";
+                } else {
+                    sem_cadastro.style.display = "block";
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

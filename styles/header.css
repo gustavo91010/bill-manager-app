@@ -1,0 +1,17 @@
+
+header{
+    background-color: var(--cor-texto-primaria);
+}
+.navegacao{
+    margin: 0 2%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.navegacao__logo{
+    width: 30x;
+    height: 30px;
+}
+.navegacao_text{
+    color: var(--cor-secundaria);
+}
