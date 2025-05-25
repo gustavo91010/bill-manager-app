@@ -10,7 +10,8 @@ export async function GET(
 ): Promise<NextResponse> {
   const path = (await params).path
 
-  const url = `${API_BASE}/${path}/${req.nextUrl.search}`;
+  const url = `${API_BASE}/${path.join("/")}${req.nextUrl.search}`;
+  // const url = `${API_BASE}/${path}/${req.nextUrl.search}`;
   const token = "ae3cbe27-cb95-40b2-b940-8d5624870101";
 
   const response = await fetch(url, {

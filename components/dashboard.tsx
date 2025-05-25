@@ -38,9 +38,7 @@ export default function Dashboard() {
   useEffect(() => {
     const loadExpenses = async () => {
 
-      // const sumary = await getSumary(calendarDate)
       setSumary(await getSumary(calendarDate))
-      // const data = await getPayments(calendarDate)
       setExpenses(await getPayments(calendarDate))
     }
 
@@ -51,6 +49,9 @@ export default function Dashboard() {
     setExpandedDates((prev) => (prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]))
   }
 
+  function renderCurrency(value?: number): string {
+    return value !== undefined ? `R$ ${value.toFixed(2)}` : "Carregando...";
+  }
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-background">
@@ -136,7 +137,7 @@ export default function Dashboard() {
                   <CardTitle className="text-sm font-medium text-blue-700">Total do Mês</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-700">R$ {sumary ? sumary.totalDue.toFixed(2) : "Carregando..."}</div>
+                  <div className="text-2xl font-bold text-blue-700">R$ {renderCurrency(sumary?.totalDue)}</div>
                 </CardContent>
               </Card>
               <Card className="border-green-100 bg-green-50">
@@ -144,7 +145,7 @@ export default function Dashboard() {
                   <CardTitle className="text-sm font-medium text-green-700">Já Pago</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-700">R$ {sumary ? sumary.amountPaid.toFixed(2) : "carregand"}</div>
+                  <div className="text-2xl font-bold text-green-700">R$ {renderCurrency(sumary?.amountPaid)}</div>
                 </CardContent>
               </Card>
               <Card className="border-red-100 bg-red-50">
@@ -152,7 +153,7 @@ export default function Dashboard() {
                   <CardTitle className="text-sm font-medium text-red-700">Restante</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-700">R$ {sumary ? sumary.remaining.toFixed(2) : "carregand"}</div>
+                  <div className="text-2xl font-bold text-red-700">R$ {renderCurrency(sumary?.remaining)}</div>
                 </CardContent>
               </Card>
             </div>
@@ -204,11 +205,8 @@ export default function Dashboard() {
                   <CardContent>
                     <CalendarWidget
                       expenses={expenses}
-                      // onRangeChange={setCalendarRange}
                       onMonthChange={async (date) => {
-                        // console.log("Mês alterado:", date)
                         const data = await getPayments(date)
-                        // window.alert(JSON.stringify(data))
                         setExpenses(data)
                         setCalendarDate(date)
                       }}

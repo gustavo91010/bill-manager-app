@@ -14,24 +14,21 @@ export interface Expense {
   dueDate: string
 }
 // API functions
-
 export async function getSumary(date: Date): Promise<Sumary> {
 
   const start = format(startOfMonth(date), "dd-MM-yyyy")
   const finish = format(endOfMonth(date), "dd-MM-yyyy")
-  console.log("sumary:", start, finish)
-  // chamar o enpoint sumary aqui
-  const totalDue = Math.random() * (5000 - 500) + 500;
-  const amountPaid = totalDue * 0.6;
-  const remaining = totalDue - amountPaid;
 
-  const mockSummary: Sumary = {
-    totalDue,
-    amountPaid,
-    remaining,
-  };
-  window.alert(`Início: ${start} - Fim: ${finish}\nTotal: ${totalDue.toFixed(2)}`);
-  return mockSummary;
+  const params = new URLSearchParams({ start, finsh: finish });
+  const url = `/api/proxy/payment/sumary?${params.toString()}`;
+  return fetch(url)
+    .then(res => res.json())
+    .then(res => res as Sumary)
+    .then(res => {
+
+      return res;
+    });
+
 }
 
 export async function getPayments(date: Date): Promise<AdaptedExpenses[]> {
@@ -77,13 +74,3 @@ export async function createExpense(expense: Expense): Promise<Expense> {
   return response.json()
 }
 
-// export async function getExpenses(): Promise<Expense[]> {
-// const response = await fetch(`${API_BASE_URL}/expenses`)
-// console.log("aqui?? getExpenses")
-// if (!response.ok) {
-//   const error = await response.json()
-//   throw new Error(error.message || "Erro ao buscar despesas")
-// }
-
-// return response.json()
-// }
