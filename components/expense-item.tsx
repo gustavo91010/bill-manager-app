@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Button } from "./ui/button"
+import { confirmPayment } from "@/lib/api"
 
 type ExpenseItemProps = {
   expense: {
@@ -37,7 +38,8 @@ export function ExpenseItem({ expense }: ExpenseItemProps) {
         </div>
       </div>
       <Button
-        onClick={() => console.log("Pagar", expense.id)}
+        // onClick={() => console.log("Pagar", expense.id)}
+        onClick={() => confirmPayment(expense.id)}
         className="self-end bg-blue-600 hover:bg-emerald-700"
       >
         pagar

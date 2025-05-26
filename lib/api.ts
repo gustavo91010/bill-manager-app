@@ -14,6 +14,27 @@ export interface Expense {
   dueDate: string
 }
 // API functions
+
+export async function confirmPayment(expenseId: number): Promise<void> {
+  console.log("confirmPayment expense id:", expenseId);
+
+  const url = `/api/proxy/payment/confirm-paymeny/${expenseId}`
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'ae3cbe27-cb95-40b2-b940-8d5624870101',
+    },
+  });
+
+  console.log("res", response)
+  if (!response.ok) {
+    console.error('Erro ao confirmar pagamento');
+  } else {
+    console.log('Pagamento confirmado com sucesso');
+  }
+}
 export async function getSumary(date: Date): Promise<Sumary> {
 
   const start = format(startOfMonth(date), "dd-MM-yyyy")
