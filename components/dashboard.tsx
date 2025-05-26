@@ -168,6 +168,7 @@ export default function Dashboard() {
                   </Button>
                 </div>
 
+                {/* agrega as contas vencendo no mesmo dia */}
                 <div className="space-y-4">
                   {expenses.map((dateGroup) => (
                     <Card key={dateGroup.date} className="border-gray-200">
@@ -184,6 +185,7 @@ export default function Dashboard() {
                       {expandedDates.includes(dateGroup.date) && (
                         <CardContent className="pt-0">
                           <div className="space-y-2">
+                            {/* ele mostra o objeto pagamento aqui */}
                             {dateGroup.expenses.map((expense) => (
                               <ExpenseItem key={expense.id} expense={expense} />
                             ))}
