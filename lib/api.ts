@@ -15,7 +15,7 @@ export interface Expense {
 }
 // API functions
 
-export async function confirmPayment(expenseId: number): Promise<void> {
+export async function confirmPayment(expenseId: number): Promise<Expense> {
   console.log("confirmPayment expense id:", expenseId);
 
   const url = `/api/proxy/payment/confirm-paymeny/${expenseId}`
@@ -34,6 +34,9 @@ export async function confirmPayment(expenseId: number): Promise<void> {
   } else {
     console.log('Pagamento confirmado com sucesso');
   }
+
+  // return response as Expense;
+  return response.json();
 }
 export async function getSumary(date: Date): Promise<Sumary> {
 
