@@ -45,6 +45,7 @@ export async function PUT(
   { params }: { params: { path: string[] } }
 ): Promise<NextResponse> {
   const path = (await params).path
+  //
   // const path = params.path
   const url = `${API_BASE}/${path.join('/')}`
 

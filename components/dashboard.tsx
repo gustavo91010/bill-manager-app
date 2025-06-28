@@ -52,6 +52,16 @@ export default function Dashboard() {
   function renderCurrency(value?: number): string {
     return value !== undefined ? `R$ ${value.toFixed(2)}` : "Carregando...";
   }
+
+  const reloadSummary = async () => {
+    const sumaryData = await getSumary(calendarDate)
+    setSumary({
+      totalDue: sumaryData.totalDue,
+      amountPaid: sumaryData.amountPaid,
+      remaining: sumaryData.remaining,
+    })
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-background">
@@ -187,7 +197,7 @@ export default function Dashboard() {
                           <div className="space-y-2">
                             {/* ele mostra o objeto pagamento aqui */}
                             {dateGroup.expenses.map((expense) => (
-                              <ExpenseItem key={expense.id} expense={expense} />
+                              <ExpenseItem key={expense.id} expense={expense} onPaymentConfirmed={reloadSummary} />
                             ))}
                           </div>
                         </CardContent>

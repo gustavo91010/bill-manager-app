@@ -10,8 +10,10 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api
 export interface Expense {
   id?: number
   description: string
+
   amount: number
   dueDate: string
+  status: string
 }
 // API functions
 
@@ -31,12 +33,13 @@ export async function confirmPayment(expenseId: number): Promise<Expense> {
   console.log("res", response)
   if (!response.ok) {
     console.error('Erro ao confirmar pagamento');
+    throw new Error('Erro ao confirmar pagamento.')
   } else {
-    console.log('Pagamento confirmado com sucesso');
+    const data = await response.json()
+    console.log('Pagamento confirmado com sucesso', data);
+    return data.payment;
   }
 
-  // return response as Expense;
-  return response.json();
 }
 export async function getSumary(date: Date): Promise<Sumary> {
 
