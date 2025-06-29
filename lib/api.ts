@@ -2,6 +2,7 @@ import { getYear, getMonth, format, startOfMonth, endOfMonth } from "date-fns";
 import { AdaptedExpenses } from '@/app/api/types/payments';
 import { convertPayments } from '../app/api/adapters/payments.adapter';
 import { Sumary } from "@/app/api/types/sumary";
+import { ExpensePayload } from "@/app/api/types/expensePayload";
 
 // API configuration
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.example.com"
@@ -82,22 +83,22 @@ export async function health(): Promise<void> {
   })
 }
 
-export async function createExpense(expense: Expense): Promise<Expense> {
-  console.log("aquicreateExpense getExpenses")
-  console.log("API_BASE_URL " + API_BASE_URL)
-  const response = await fetch(`${API_BASE_URL}/expenses`, {
+export async function createExpense(expense: ExpensePayload): Promise<Expense> {
+  console.log("createExpense chamado com:", expense);
+
+  const response = await fetch(`/api/proxy/payment/repeat/1`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(expense),
-  })
+  });
 
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Erro ao criar despesa")
+    const error = await response.json();
+    throw new Error(error.message || "Erro ao criar despesa");
   }
 
-  return response.json()
+  return response.json();
 }
 

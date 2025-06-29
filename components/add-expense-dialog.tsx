@@ -20,11 +20,12 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useToast } from "@/components/ui/use-toast"
 import { cn } from "@/lib/utils"
-import { API_BASE_URL, createExpense, health } from "@/lib/api"
+import { API_BASE_URL, createExpense, getPayments, getSumary, health } from "@/lib/api"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { ExpensePayload } from "@/app/api/types/expensePayload"
 
 const formSchema = z.object({
   description: z.string().min(3, {
@@ -41,17 +42,29 @@ const formSchema = z.object({
 type AddExpenseDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onReload: () => Promise<void>
 }
 
 export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const [summary, setSummary] = useState<Sumary | null>(null)
+  const [payments, setPayments] = useState<AdaptedExpenses[]>([])
+
+  async function fetchData() {
+    const today = new Date()
+    const sum = await getSumary(today)
+    const pays = await getPayments(today)
+    setSummary(sum)
+    setPayments(pays)
+  }
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       description: "",
-      amount: undefined,
+      amount: 0,
       dueDate: undefined,
     },
   })
@@ -59,29 +72,22 @@ export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsSubmitting(true)
-
-      // Format the date to ISO string for API
-      const formattedValues = {
+      const formattedValues: ExpensePayload = {
         description: values.description,
-        amount: values.amount,
-        dueDate: values.dueDate.toISOString(),
+        value: values.amount,
+        due_date: values.dueDate.toISOString().split("T")[0],
       }
 
-      // Log the API endpoint for debugging
-      console.log(`Submitting to: ${API_BASE_URL}/expenses`)
-
-      // Submit to API
       await createExpense(formattedValues)
+      await fetchData()
       const response = await health()
       console.log(response)
 
-      // Show success message
       toast({
         title: "Despesa adicionada",
         description: "A despesa foi adicionada com sucesso.",
       })
 
-      // Reset form and close dialog
       form.reset()
       onOpenChange(false)
     } catch (error) {
@@ -131,10 +137,9 @@ export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) 
                       type="number"
                       step="0.01"
                       placeholder="0,00"
-                      {...field}
+                      value={field.value ?? ""}
                       onChange={(e) => {
-                        // Handle empty string case
-                        const value = e.target.value === "" ? undefined : e.target.value
+                        const value = e.target.value === "" ? undefined : Number(e.target.value)
                         field.onChange(value)
                       }}
                     />
@@ -165,8 +170,8 @@ export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) 
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
+                        selected={field.value ?? new Date()}
+                        onSelect={(date) => field.onChange(date ?? undefined)}
                         disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                         initialFocus
                         locale={ptBR}

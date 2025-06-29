@@ -1,4 +1,3 @@
-
 "use client"
 import { useEffect, useState } from "react"
 import { Calendar, DollarSign, Home, PieChart, Settings } from "lucide-react"
@@ -29,37 +28,25 @@ import { Sumary } from "@/app/api/types/sumary"
 export default function Dashboard() {
   const [expenses, setExpenses] = useState<AdaptedExpenses[]>([])
   const [sumary, setSumary] = useState<Sumary>()
-
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false)
   const [expandedDates, setExpandedDates] = useState<string[]>(["20 de Maio"])
-
   const [calendarDate, setCalendarDate] = useState<Date>(new Date())
 
   useEffect(() => {
-    const loadExpenses = async () => {
-
-      setSumary(await getSumary(calendarDate))
-      setExpenses(await getPayments(calendarDate))
-    }
-
-    loadExpenses()
+    reloadData()
   }, [calendarDate])
+
+const reloadData = async (date: Date = calendarDate) => {
+  setSumary(await getSumary(date))
+  setExpenses(await getPayments(date))
+}
 
   const toggleDateExpansion = (date: string) => {
     setExpandedDates((prev) => (prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]))
   }
 
   function renderCurrency(value?: number): string {
-    return value !== undefined ? `R$ ${value.toFixed(2)}` : "Carregando...";
-  }
-
-  const reloadSummary = async () => {
-    const sumaryData = await getSumary(calendarDate)
-    setSumary({
-      totalDue: sumaryData.totalDue,
-      amountPaid: sumaryData.amountPaid,
-      remaining: sumaryData.remaining,
-    })
+    return value !== undefined ? `R$ ${value.toFixed(2)}` : "Carregando..."
   }
 
   return (
@@ -147,7 +134,7 @@ export default function Dashboard() {
                   <CardTitle className="text-sm font-medium text-blue-700">Total do Mês</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-700">R$ {renderCurrency(sumary?.totalDue)}</div>
+                  <div className="text-2xl font-bold text-blue-700">{renderCurrency(sumary?.totalDue)}</div>
                 </CardContent>
               </Card>
               <Card className="border-green-100 bg-green-50">
@@ -155,7 +142,7 @@ export default function Dashboard() {
                   <CardTitle className="text-sm font-medium text-green-700">Já Pago</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-700">R$ {renderCurrency(sumary?.amountPaid)}</div>
+                  <div className="text-2xl font-bold text-green-700">{renderCurrency(sumary?.amountPaid)}</div>
                 </CardContent>
               </Card>
               <Card className="border-red-100 bg-red-50">
@@ -163,13 +150,12 @@ export default function Dashboard() {
                   <CardTitle className="text-sm font-medium text-red-700">Restante</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-700">R$ {renderCurrency(sumary?.remaining)}</div>
+                  <div className="text-2xl font-bold text-red-700">{renderCurrency(sumary?.remaining)}</div>
                 </CardContent>
               </Card>
             </div>
 
             <div className="grid gap-6 md:grid-cols-3">
-              {/* Upcoming Payments Section */}
               <div className="md:col-span-2 space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Pagamentos Próximos</h2>
@@ -178,7 +164,6 @@ export default function Dashboard() {
                   </Button>
                 </div>
 
-                {/* agrega as contas vencendo no mesmo dia */}
                 <div className="space-y-4">
                   {expenses.map((dateGroup) => (
                     <Card key={dateGroup.date} className="border-gray-200">
@@ -186,18 +171,15 @@ export default function Dashboard() {
                         <div className="flex items-center justify-between">
                           <CardTitle>{dateGroup.date}</CardTitle>
                           <div className="text-sm text-muted-foreground">
-                            {dateGroup.expenses.length} itens · R$
-                            {dateGroup.expenses.reduce((sum, expense) => sum + expense.amount, 0).toFixed(2)}
+                            {dateGroup.expenses.length} itens · R$ {dateGroup.expenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}
                           </div>
                         </div>
                       </CardHeader>
-
                       {expandedDates.includes(dateGroup.date) && (
                         <CardContent className="pt-0">
                           <div className="space-y-2">
-                            {/* ele mostra o objeto pagamento aqui */}
                             {dateGroup.expenses.map((expense) => (
-                              <ExpenseItem key={expense.id} expense={expense} onPaymentConfirmed={reloadSummary} />
+                              <ExpenseItem key={expense.id} expense={expense} onPaymentConfirmed={reloadData} />
                             ))}
                           </div>
                         </CardContent>
@@ -207,7 +189,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Calendar Widget */}
               <div>
                 <Card className="h-full border-blue-100">
                   <CardHeader>
@@ -231,8 +212,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <AddExpenseDialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen} />
+      <AddExpenseDialog
+        open={isAddExpenseOpen}
+        onOpenChange={setIsAddExpenseOpen}
+        onReload={reloadData}
+      />
     </SidebarProvider>
   )
 }
-
