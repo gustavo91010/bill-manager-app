@@ -45,20 +45,9 @@ type AddExpenseDialogProps = {
   onReload: () => Promise<void>
 }
 
-export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) {
+export function AddExpenseDialog({ open, onOpenChange, onReload }: AddExpenseDialogProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const [summary, setSummary] = useState<Sumary | null>(null)
-  const [payments, setPayments] = useState<AdaptedExpenses[]>([])
-
-  async function fetchData() {
-    const today = new Date()
-    const sum = await getSumary(today)
-    const pays = await getPayments(today)
-    setSummary(sum)
-    setPayments(pays)
-  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,10 +68,7 @@ export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) 
       }
 
       await createExpense(formattedValues)
-      await fetchData()
-      const response = await health()
-      console.log(response)
-
+      await onReload()
       toast({
         title: "Despesa adicionada",
         description: "A despesa foi adicionada com sucesso.",
