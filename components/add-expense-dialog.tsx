@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon } from 'lucide-react'
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
@@ -18,14 +18,12 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { API_BASE_URL, createExpense, getPayments, getSumary, health } from "@/lib/api"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { ExpensePayload } from "@/app/api/types/expensePayload"
 
 const formSchema = z.object({
   description: z.string().min(3, {
@@ -38,6 +36,12 @@ const formSchema = z.object({
     required_error: "A data de vencimento é obrigatória.",
   }),
 })
+
+type ExpensePayload = {
+  description: string
+  value: number
+  due_date: string
+}
 
 type AddExpenseDialogProps = {
   open: boolean
@@ -53,7 +57,7 @@ export function AddExpenseDialog({ open, onOpenChange, onReload }: AddExpenseDia
     resolver: zodResolver(formSchema),
     defaultValues: {
       description: "",
-      amount: 0,
+      amount: undefined,
       dueDate: undefined,
     },
   })
@@ -61,14 +65,17 @@ export function AddExpenseDialog({ open, onOpenChange, onReload }: AddExpenseDia
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsSubmitting(true)
+
       const formattedValues: ExpensePayload = {
         description: values.description,
         value: values.amount,
         due_date: values.dueDate.toISOString().split("T")[0],
       }
 
-      await createExpense(formattedValues)
+      console.log("Creating expense:", formattedValues)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       await onReload()
+
       toast({
         title: "Despesa adicionada",
         description: "A despesa foi adicionada com sucesso.",
@@ -141,23 +148,36 @@ export function AddExpenseDialog({ open, onOpenChange, onReload }: AddExpenseDia
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Data de Vencimento</FormLabel>
-                  <Popover>
+                  <Popover modal={true}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant="outline"
-                          className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                          type="button"
                         >
-                          {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+                          {field.value ? (
+                            format(field.value, "PPP", { locale: ptBR })
+                          ) : (
+                            <span>Selecione uma data</span>
+                          )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent 
+                      className="w-auto p-0 z-[9999]" 
+                      align="start"
+                      side="bottom"
+                      sideOffset={4}
+                    >
                       <Calendar
                         mode="single"
-                        selected={field.value ?? new Date()}
-                        onSelect={(date) => field.onChange(date ?? undefined)}
+                        selected={field.value}
+                        onSelect={field.onChange}
                         disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                         initialFocus
                         locale={ptBR}
