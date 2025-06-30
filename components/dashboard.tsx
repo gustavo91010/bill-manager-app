@@ -1,4 +1,5 @@
 "use client"
+
 import { useEffect, useState } from "react"
 import { Calendar, DollarSign, Home, PieChart, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -29,6 +30,12 @@ export default function Dashboard() {
   const [expenses, setExpenses] = useState<AdaptedExpenses[]>([])
   const [sumary, setSumary] = useState<Sumary>()
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false)
+  const [editingExpense, setEditingExpense] = useState<{
+    id: number
+    name: string
+    amount: number
+    dueDate?: string
+  } | null>(null)
   const [expandedDates, setExpandedDates] = useState<string[]>(["20 de Maio"])
   const [calendarDate, setCalendarDate] = useState<Date>(new Date())
 
@@ -36,10 +43,10 @@ export default function Dashboard() {
     reloadData()
   }, [calendarDate])
 
-const reloadData = async (date: Date = calendarDate) => {
-  setSumary(await getSumary(date))
-  setExpenses(await getPayments(date))
-}
+  const reloadData = async (date: Date = calendarDate) => {
+    setSumary(await getSumary(date))
+    setExpenses(await getPayments(date))
+  }
 
   const toggleDateExpansion = (date: string) => {
     setExpandedDates((prev) => (prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]))
@@ -159,7 +166,13 @@ const reloadData = async (date: Date = calendarDate) => {
               <div className="md:col-span-2 space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Pagamentos Próximos</h2>
-                  <Button onClick={() => setIsAddExpenseOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
+                  <Button
+                    onClick={() => {
+                      setIsAddExpenseOpen(true)
+                      setEditingExpense(null)
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
                     Adicionar Nova Despesa
                   </Button>
                 </div>
@@ -179,7 +192,23 @@ const reloadData = async (date: Date = calendarDate) => {
                         <CardContent className="pt-0">
                           <div className="space-y-2">
                             {dateGroup.expenses.map((expense) => (
-                              <ExpenseItem key={expense.id} expense={expense} onPaymentConfirmed={reloadData} />
+                              <ExpenseItem
+                                key={expense.id}
+                                expense={expense}
+                                onPaymentConfirmed={reloadData}
+                                onEdit={(expense) => {
+                                  setEditingExpense({
+                                    id: expense.id,
+                                    name: expense.name,
+                                    amount: expense.amount,
+                                    dueDate: expense.dueDate,
+                                  })
+                                  setIsAddExpenseOpen(true)
+                                }}
+                                onDelete={(id) => {
+                                  console.log("Deletar", id)
+                                }}
+                              />
                             ))}
                           </div>
                         </CardContent>
@@ -214,8 +243,12 @@ const reloadData = async (date: Date = calendarDate) => {
 
       <AddExpenseDialog
         open={isAddExpenseOpen}
-        onOpenChange={setIsAddExpenseOpen}
+        onOpenChange={(open) => {
+          setIsAddExpenseOpen(open)
+          if (!open) setEditingExpense(null)
+        }}
         onReload={reloadData}
+        expense={editingExpense}
       />
     </SidebarProvider>
   )

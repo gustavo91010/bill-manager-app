@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CalendarIcon } from 'lucide-react'
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -43,15 +43,22 @@ type ExpensePayload = {
   due_date: string
 }
 
-type AddExpenseDialogProps = {
+type ExpenseDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onReload: () => Promise<void>
+  expense?: {
+    id: number
+    name: string
+    amount: number
+    dueDate?: string
+  } | null
 }
 
-export function AddExpenseDialog({ open, onOpenChange, onReload }: AddExpenseDialogProps) {
+export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: ExpenseDialogProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isEditing = !!expense
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,6 +68,23 @@ export function AddExpenseDialog({ open, onOpenChange, onReload }: AddExpenseDia
       dueDate: undefined,
     },
   })
+
+  useEffect(() => {
+  console.log("Abrindo diálogo", { expense, open });
+    if (expense && open) {
+      form.reset({
+        description: expense.name,
+        amount: expense.amount,
+        dueDate: expense.dueDate ? new Date(expense.dueDate) : undefined,
+      })
+    } else if (!expense && open) {
+      form.reset({
+        description: "",
+        amount: undefined,
+        dueDate: undefined,
+      })
+    }
+  }, [expense, open, form])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -72,22 +96,31 @@ export function AddExpenseDialog({ open, onOpenChange, onReload }: AddExpenseDia
         due_date: values.dueDate.toISOString().split("T")[0],
       }
 
-      console.log("Creating expense:", formattedValues)
+      if (isEditing) {
+        console.log("Atualizando despesa:", expense?.id, formattedValues)
+        // await updateExpense(expense.id, formattedValues)
+      } else {
+        console.log("Criando nova despesa:", formattedValues)
+        // await createExpense(formattedValues)
+      }
+
       await new Promise((resolve) => setTimeout(resolve, 1000))
       await onReload()
 
       toast({
-        title: "Despesa adicionada",
-        description: "A despesa foi adicionada com sucesso.",
+        title: isEditing ? "Despesa atualizada" : "Despesa adicionada",
+        description: isEditing 
+          ? "A despesa foi atualizada com sucesso." 
+          : "A despesa foi adicionada com sucesso.",
       })
 
       form.reset()
       onOpenChange(false)
     } catch (error) {
-      console.error("Erro ao adicionar despesa:", error)
+      console.error("Erro ao salvar despesa:", error)
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao adicionar a despesa. Tente novamente.",
+        description: "Ocorreu um erro ao salvar a despesa. Tente novamente.",
         variant: "destructive",
       })
     } finally {
@@ -99,8 +132,15 @@ export function AddExpenseDialog({ open, onOpenChange, onReload }: AddExpenseDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Nova Despesa</DialogTitle>
-          <DialogDescription>Insira os detalhes da sua nova despesa.</DialogDescription>
+          <DialogTitle>
+            {isEditing ? "Editar Despesa" : "Adicionar Nova Despesa"}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing 
+              ? "Altere os detalhes da despesa." 
+              : "Insira os detalhes da sua nova despesa."
+            }
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
