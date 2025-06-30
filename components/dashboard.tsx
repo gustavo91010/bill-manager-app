@@ -5,6 +5,7 @@ import { Calendar, DollarSign, Home, PieChart, Settings, CheckCircle, Circle, Al
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getPayments, getSumary } from "@/lib/api"
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog"
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +39,8 @@ export default function Dashboard() {
   } | null>(null)
   const [expandedDates, setExpandedDates] = useState<string[]>(["20 de Maio"])
   const [calendarDate, setCalendarDate] = useState<Date>(new Date())
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
   useEffect(() => {
     reloadData()
@@ -56,49 +59,49 @@ export default function Dashboard() {
     return value !== undefined ? `R$ ${value.toFixed(2)}` : "Carregando..."
   }
 
-function getDayStatusIcon(expenses: AdaptedExpenses["expenses"]) {
-  const allPaid = expenses.every((e) => e.status.toLowerCase() === "pago")
-  const anyOverdue = expenses.some((e) => e.status.toLowerCase() === "vencido")
-  const anyDueSoon = expenses.some((e) => e.status.toLowerCase() === "a_vencer")
-  const anyDueToday = expenses.some((e) => e.status.toLowerCase() === "vencendo_hoje")
-  const nonePaid = expenses.every((e) => e.status.toLowerCase() !== "pago")
+  function getDayStatusIcon(expenses: AdaptedExpenses["expenses"]) {
+    const allPaid = expenses.every((e) => e.status.toLowerCase() === "pago")
+    const anyOverdue = expenses.some((e) => e.status.toLowerCase() === "vencido")
+    const anyDueSoon = expenses.some((e) => e.status.toLowerCase() === "a_vencer")
+    const anyDueToday = expenses.some((e) => e.status.toLowerCase() === "vencendo_hoje")
+    const nonePaid = expenses.every((e) => e.status.toLowerCase() !== "pago")
 
-  if (allPaid)
+    if (allPaid)
+      return (
+        <span role="img" aria-label="Tudo pago">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+        </span>
+      )
+    if (anyOverdue)
+      return (
+        <span role="img" aria-label="Contas vencidas">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+        </span>
+      )
+    if (anyDueToday)
+      return (
+        <span role="img" aria-label="Contas vencendo hoje">
+          <Clock className="h-4 w-4 text-orange-600" />
+        </span>
+      )
+    if (anyDueSoon)
+      return (
+        <span role="img" aria-label="Contas a vencer">
+          <Circle className="h-4 w-4 text-blue-600" />
+        </span>
+      )
+    if (nonePaid)
+      return (
+        <span role="img" aria-label="Nada pago">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+        </span>
+      )
     return (
-      <span role="img" aria-label="Tudo pago">
-        <CheckCircle className="h-4 w-4 text-green-600" />
+      <span role="img" aria-label="Parcialmente pago">
+        <Circle className="h-4 w-4 text-yellow-500" />
       </span>
     )
-  if (anyOverdue)
-    return (
-      <span role="img" aria-label="Contas vencidas">
-        <AlertCircle className="h-4 w-4 text-red-600" />
-      </span>
-    )
-  if (anyDueToday)
-    return (
-      <span role="img" aria-label="Contas vencendo hoje">
-        <Clock className="h-4 w-4 text-orange-600" />
-      </span>
-    )
-  if (anyDueSoon)
-    return (
-      <span role="img" aria-label="Contas a vencer">
-        <Circle className="h-4 w-4 text-blue-600" />
-      </span>
-    )
-  if (nonePaid)
-    return (
-      <span role="img" aria-label="Nada pago">
-        <AlertCircle className="h-4 w-4 text-red-600" />
-      </span>
-    )
-  return (
-    <span role="img" aria-label="Parcialmente pago">
-      <Circle className="h-4 w-4 text-yellow-500" />
-    </span>
-  )
-}
+  }
 
   return (
     <SidebarProvider>
@@ -254,6 +257,8 @@ function getDayStatusIcon(expenses: AdaptedExpenses["expenses"]) {
                                 }}
                                 onDelete={(id) => {
                                   console.log("Deletar", id)
+                                  setDeleteId(id)
+                                  setIsConfirmDeleteOpen(true)
                                 }}
                               />
                             ))}
@@ -288,6 +293,7 @@ function getDayStatusIcon(expenses: AdaptedExpenses["expenses"]) {
         </div>
       </div>
 
+
       <AddExpenseDialog
         open={isAddExpenseOpen}
         onOpenChange={(open) => {
@@ -297,6 +303,24 @@ function getDayStatusIcon(expenses: AdaptedExpenses["expenses"]) {
         onReload={reloadData}
         expense={editingExpense}
       />
+
+      <ConfirmDeleteDialog
+        open={isConfirmDeleteOpen}
+        onCancel={() => {
+          setIsConfirmDeleteOpen(false)
+          setDeleteId(null)
+        }}
+        onConfirm={async () => {
+          if (deleteId !== null) {
+            // await deleteExpense(deleteId)
+            console.log("Deletar despesa com id", deleteId)
+            setIsConfirmDeleteOpen(false)
+            setDeleteId(null)
+            await reloadData()
+          }
+        }}
+      />
+
     </SidebarProvider>
   )
 }
