@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Calendar, DollarSign, Home, PieChart, Settings } from "lucide-react"
+import { Calendar, DollarSign, Home, PieChart, Settings, CheckCircle, Circle, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getPayments, getSumary } from "@/lib/api"
@@ -55,6 +55,50 @@ export default function Dashboard() {
   function renderCurrency(value?: number): string {
     return value !== undefined ? `R$ ${value.toFixed(2)}` : "Carregando..."
   }
+
+function getDayStatusIcon(expenses: AdaptedExpenses["expenses"]) {
+  const allPaid = expenses.every((e) => e.status.toLowerCase() === "pago")
+  const anyOverdue = expenses.some((e) => e.status.toLowerCase() === "vencido")
+  const anyDueSoon = expenses.some((e) => e.status.toLowerCase() === "a_vencer")
+  const anyDueToday = expenses.some((e) => e.status.toLowerCase() === "vencendo_hoje")
+  const nonePaid = expenses.every((e) => e.status.toLowerCase() !== "pago")
+
+  if (allPaid)
+    return (
+      <span role="img" aria-label="Tudo pago">
+        <CheckCircle className="h-4 w-4 text-green-600" />
+      </span>
+    )
+  if (anyOverdue)
+    return (
+      <span role="img" aria-label="Contas vencidas">
+        <AlertCircle className="h-4 w-4 text-red-600" />
+      </span>
+    )
+  if (anyDueToday)
+    return (
+      <span role="img" aria-label="Contas vencendo hoje">
+        <Clock className="h-4 w-4 text-orange-600" />
+      </span>
+    )
+  if (anyDueSoon)
+    return (
+      <span role="img" aria-label="Contas a vencer">
+        <Circle className="h-4 w-4 text-blue-600" />
+      </span>
+    )
+  if (nonePaid)
+    return (
+      <span role="img" aria-label="Nada pago">
+        <AlertCircle className="h-4 w-4 text-red-600" />
+      </span>
+    )
+  return (
+    <span role="img" aria-label="Parcialmente pago">
+      <Circle className="h-4 w-4 text-yellow-500" />
+    </span>
+  )
+}
 
   return (
     <SidebarProvider>
@@ -163,7 +207,7 @@ export default function Dashboard() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-3">
-              <div className="md:col-span-2 space-y-4">
+              <div className="md:col-span-2 space-y-4 overflow-y-auto max-h-[calc(100vh-320px)] pr-1">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Pagamentos Próximos</h2>
                   <Button
@@ -182,7 +226,10 @@ export default function Dashboard() {
                     <Card key={dateGroup.date} className="border-gray-200">
                       <CardHeader className="cursor-pointer py-3" onClick={() => toggleDateExpansion(dateGroup.date)}>
                         <div className="flex items-center justify-between">
-                          <CardTitle>{dateGroup.date}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <CardTitle>{dateGroup.date}</CardTitle>
+                            {getDayStatusIcon(dateGroup.expenses)}
+                          </div>
                           <div className="text-sm text-muted-foreground">
                             {dateGroup.expenses.length} itens · R$ {dateGroup.expenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}
                           </div>
