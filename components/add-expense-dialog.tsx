@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { createExpense, updateExpense } from "@/lib/api"
 
 const formSchema = z.object({
   description: z.string().min(3, {
@@ -98,10 +99,10 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
 
       if (isEditing) {
         console.log("Atualizando despesa:", expense?.id, formattedValues)
-        // await updateExpense(expense.id, formattedValues)
+        await updateExpense(expense.id, formattedValues)
       } else {
         console.log("Criando nova despesa:", formattedValues)
-        // await createExpense(formattedValues)
+        await createExpense(formattedValues)
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1000))

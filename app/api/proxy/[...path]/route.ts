@@ -2,8 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const API_BASE = 'http://localhost:8183'
-const token = 'ae3cbe27-cb95-40b2-b940-8d5624870101'
-
+// 'Authorization': process.env.NEXT_PUBLIC_API_TOKEN!,
+// const token = 'ae3cbe27-cb95-40b2-b940-8d5624870101'
+const token = process.env.NEXT_PUBLIC_API_TOKEN!
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }

@@ -5,7 +5,8 @@ import { Sumary } from "@/app/api/types/sumary";
 import { ExpensePayload } from "@/app/api/types/expensePayload";
 
 // API configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.example.com"
+// export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.example.com"
+export const ACCESS_TOKEN = process.env.NEXT_PUBLIC_API_BASE_URL || "ae3cbe27-cb95-40b2-b940-8d5624870101"
 
 // Types
 export interface Expense {
@@ -27,7 +28,7 @@ export async function confirmPayment(expenseId: number): Promise<Expense> {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'ae3cbe27-cb95-40b2-b940-8d5624870101',
+      'Authorization': process.env.NEXT_PUBLIC_API_TOKEN!,
     },
   });
 
@@ -81,6 +82,26 @@ export async function health(): Promise<void> {
 
     window.alert(`RESPOSTA: ${JSON.stringify(response)}`)
   })
+}
+
+// export async function updateExpense(expense: ExpensePayload): Promise<Expense> 
+export async function updateExpense(id: number, expense: ExpensePayload): Promise<Expense> {
+
+  const response = await fetch(`/api/proxy/payment/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      'Authorization': process.env.NEXT_PUBLIC_API_TOKEN!,
+    },
+    body: JSON.stringify(expense),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Erro ao atualizar despesa");
+  }
+
+  return response.json();
 }
 
 export async function createExpense(expense: ExpensePayload): Promise<Expense> {
