@@ -257,7 +257,6 @@ export default function Dashboard() {
                                   setIsAddExpenseOpen(true)
                                 }}
                                 onDelete={(id) => {
-                                  console.log("Deletar", id)
                                   setDeleteId(id)
                                   setIsConfirmDeleteOpen(true)
                                 }}
@@ -314,7 +313,6 @@ export default function Dashboard() {
         onConfirm={async () => {
           if (deleteId !== null) {
             await deleteExpense(deleteId)
-            console.log("Deletar despesa com id", deleteId)
             setIsConfirmDeleteOpen(false)
             setDeleteId(null)
             await reloadData()

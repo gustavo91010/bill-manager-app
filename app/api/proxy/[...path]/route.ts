@@ -1,4 +1,3 @@
-// src/app/api/proxy/[...path]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
 const API_BASE = 'http://localhost:8183'
@@ -46,13 +45,10 @@ export async function PUT(
   { params }: { params: { path: string[] } }
 ): Promise<NextResponse> {
   const path = (await params).path
-  //
-  // const path = params.path
   const url = `${API_BASE}/${path.join('/')}`
 
   const body = await req.text()
 
-  console.log("🔗 URL enviada para o backend:", url)
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
@@ -73,8 +69,6 @@ export async function DELETE(
 ): Promise<NextResponse> {
   const path = params.path;
   const url = `${API_BASE}/${path.join('/')}`;
-
-  console.log("🔗 URL enviada para DELETE no backend:", url);
 
   const response = await fetch(url, {
     method: 'DELETE',

@@ -71,7 +71,6 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
   })
 
   useEffect(() => {
-  console.log("Abrindo diálogo", { expense, open });
     if (expense && open) {
       form.reset({
         description: expense.name,
@@ -98,27 +97,33 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
       }
 
       if (isEditing) {
-        console.log("Atualizando despesa:", expense?.id, formattedValues)
+        toast({
+          title: "Atualizando despesa",
+          description: `Atualizando a despesa: ${formattedValues.description}`,
+          variant: "default",
+        })
         await updateExpense(expense.id, formattedValues)
       } else {
-        console.log("Criando nova despesa:", formattedValues)
+        toast({
+          title: "Criando nova despesa",
+          description: `Criando a despesa: ${formattedValues.description}`,
+          variant: "default",
+        })
         await createExpense(formattedValues)
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 1000))
       await onReload()
 
       toast({
         title: isEditing ? "Despesa atualizada" : "Despesa adicionada",
-        description: isEditing 
-          ? "A despesa foi atualizada com sucesso." 
+        description: isEditing
+          ? "A despesa foi atualizada com sucesso."
           : "A despesa foi adicionada com sucesso.",
       })
 
       form.reset()
       onOpenChange(false)
     } catch (error) {
-      console.error("Erro ao salvar despesa:", error)
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao salvar a despesa. Tente novamente.",
@@ -137,8 +142,8 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
             {isEditing ? "Editar Despesa" : "Adicionar Nova Despesa"}
           </DialogTitle>
           <DialogDescription>
-            {isEditing 
-              ? "Altere os detalhes da despesa." 
+            {isEditing
+              ? "Altere os detalhes da despesa."
               : "Insira os detalhes da sua nova despesa."
             }
           </DialogDescription>
@@ -209,8 +214,8 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent 
-                      className="w-auto p-0 z-[9999]" 
+                    <PopoverContent
+                      className="w-auto p-0 z-[9999]"
                       align="start"
                       side="bottom"
                       sideOffset={4}

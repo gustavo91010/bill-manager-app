@@ -56,7 +56,6 @@ export function ExpenseItem({ expense, onPaymentConfirmed, onEdit, onDelete }: E
               setLocalExpense({ ...localExpense, status: response.status })
               onPaymentConfirmed()
             } catch (error) {
-              console.error("Erro ao confirmar pagamento:", error)
               alert("Falha ao confirmar pagamento. Tente novamente.")
             }
           }}

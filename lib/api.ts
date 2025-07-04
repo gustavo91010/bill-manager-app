@@ -5,7 +5,6 @@ import { Sumary } from "@/app/api/types/sumary";
 import { ExpensePayload } from "@/app/api/types/expensePayload";
 
 // API configuration
-// export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.example.com"
 export const ACCESS_TOKEN = process.env.NEXT_PUBLIC_API_BASE_URL || "ae3cbe27-cb95-40b2-b940-8d5624870101"
 
 // Types
@@ -17,11 +16,9 @@ export interface Expense {
   dueDate: string
   status: string
 }
+
 // API functions
-
 export async function confirmPayment(expenseId: number): Promise<Expense> {
-  console.log("confirmPayment expense id:", expenseId);
-
   const url = `/api/proxy/payment/confirm-paymeny/${expenseId}`
 
   const response = await fetch(url, {
@@ -32,13 +29,10 @@ export async function confirmPayment(expenseId: number): Promise<Expense> {
     },
   });
 
-  console.log("res", response)
   if (!response.ok) {
-    console.error('Erro ao confirmar pagamento');
     throw new Error('Erro ao confirmar pagamento.')
   } else {
     const data = await response.json()
-    console.log('Pagamento confirmado com sucesso', data);
     return data.payment;
   }
 
@@ -57,11 +51,9 @@ export async function getSumary(date: Date): Promise<Sumary> {
 
       return res;
     });
-
 }
 
 export async function getPayments(date: Date): Promise<AdaptedExpenses[]> {
-
   const start = format(startOfMonth(date), "dd-MM-yyyy")
   const finish = format(endOfMonth(date), "dd-MM-yyyy")
 
@@ -84,10 +76,8 @@ export async function health(): Promise<void> {
   })
 }
 
-// export async function updateExpense(expense: ExpensePayload): Promise<Expense> 
 export async function updateExpense(id: number, expense: ExpensePayload): Promise<Expense> {
 
-  console.log("hum ", JSON.stringify(expense))
   const response = await fetch(`/api/proxy/payment/${id}`, {
     method: "PUT",
     headers: {
@@ -96,18 +86,14 @@ export async function updateExpense(id: number, expense: ExpensePayload): Promis
     },
     body: JSON.stringify(expense),
   });
-  console.log("response", response)
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || "Erro ao atualizar despesa");
   }
-
   return response.json();
 }
 
 export async function createExpense(expense: ExpensePayload): Promise<Expense> {
-  console.log("createExpense chamado com:", expense);
-
   const response = await fetch(`/api/proxy/payment/repeat/1`, {
     method: "POST",
     headers: {
@@ -120,13 +106,10 @@ export async function createExpense(expense: ExpensePayload): Promise<Expense> {
     const error = await response.json();
     throw new Error(error.message || "Erro ao criar despesa");
   }
-
   return response.json();
 }
 
 export async function deleteExpense(expenseId: number): Promise<void> {
-  console.log("deleteExpense chamado com id:", expenseId);
-
   const url = `/api/proxy/payment/${expenseId}`;
 
   const response = await fetch(url, {
@@ -136,11 +119,8 @@ export async function deleteExpense(expenseId: number): Promise<void> {
       'Authorization': process.env.NEXT_PUBLIC_API_TOKEN!,
     },
   });
-
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || "Erro ao excluir despesa");
   }
-
-  console.log("Despesa excluída com sucesso");
 }
