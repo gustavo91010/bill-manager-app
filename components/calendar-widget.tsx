@@ -25,14 +25,15 @@ type CalendarWidgetProps = {
 export function CalendarWidget({ expenses, onMonthChange }: CalendarWidgetProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
 
-  // const expenseDays = expenses.map((group) => {
-  //   const dateObj = new Date(group.date)
-  //   return dateObj.getDate()
-  // })
-  const expenseDays = expenses.map((group) => {
-    const day = Number.parseInt(group.date.split(" ")[0])
-    return day
+ const expenseDays = expenses
+  .map(group => {
+    const match = group.date.match(/\d+/)
+    return match ? Number(match[0]) + 1 : null
   })
+  .filter((d): d is number => d !== null)
+
+  
+
 
   const daysInMonth = new Date(getYear(currentDate), getMonth(currentDate) + 1, 0).getDate()
   const firstDayOfMonth = new Date(getYear(currentDate), getMonth(currentDate), 1).getDay()
@@ -60,7 +61,6 @@ export function CalendarWidget({ expenses, onMonthChange }: CalendarWidgetProps)
         </div>,
       )
     })
-
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(<div key={`empty-${i}`} className="h-8 w-8" />)
     }
@@ -79,7 +79,6 @@ export function CalendarWidget({ expenses, onMonthChange }: CalendarWidgetProps)
         </div>,
       )
     }
-
     return days
   }
 
