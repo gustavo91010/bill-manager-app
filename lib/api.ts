@@ -87,6 +87,7 @@ export async function health(): Promise<void> {
 // export async function updateExpense(expense: ExpensePayload): Promise<Expense> 
 export async function updateExpense(id: number, expense: ExpensePayload): Promise<Expense> {
 
+  console.log("hum ", JSON.stringify(expense))
   const response = await fetch(`/api/proxy/payment/${id}`, {
     method: "PUT",
     headers: {
@@ -95,7 +96,7 @@ export async function updateExpense(id: number, expense: ExpensePayload): Promis
     },
     body: JSON.stringify(expense),
   });
-
+  console.log("response", response)
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || "Erro ao atualizar despesa");
@@ -123,3 +124,23 @@ export async function createExpense(expense: ExpensePayload): Promise<Expense> {
   return response.json();
 }
 
+export async function deleteExpense(expenseId: number): Promise<void> {
+  console.log("deleteExpense chamado com id:", expenseId);
+
+  const url = `/api/proxy/payment/${expenseId}`;
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': process.env.NEXT_PUBLIC_API_TOKEN!,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Erro ao excluir despesa");
+  }
+
+  console.log("Despesa excluída com sucesso");
+}

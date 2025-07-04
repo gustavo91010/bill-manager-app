@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Calendar, DollarSign, Home, PieChart, Settings, CheckCircle, Circle, AlertCircle, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { getPayments, getSumary } from "@/lib/api"
+import { deleteExpense, getPayments, getSumary } from "@/lib/api"
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog"
 import {
   Sidebar,
@@ -313,7 +313,7 @@ export default function Dashboard() {
         }}
         onConfirm={async () => {
           if (deleteId !== null) {
-            // await deleteExpense(deleteId)
+            await deleteExpense(deleteId)
             console.log("Deletar despesa com id", deleteId)
             setIsConfirmDeleteOpen(false)
             setDeleteId(null)

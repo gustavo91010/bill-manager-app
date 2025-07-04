@@ -25,6 +25,10 @@ type CalendarWidgetProps = {
 export function CalendarWidget({ expenses, onMonthChange }: CalendarWidgetProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
 
+  // const expenseDays = expenses.map((group) => {
+  //   const dateObj = new Date(group.date)
+  //   return dateObj.getDate()
+  // })
   const expenseDays = expenses.map((group) => {
     const day = Number.parseInt(group.date.split(" ")[0])
     return day

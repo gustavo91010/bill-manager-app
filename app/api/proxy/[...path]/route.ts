@@ -66,3 +66,24 @@ export async function PUT(
   return new NextResponse(data, { status: response.status })
 }
 
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { path: string[] } }
+): Promise<NextResponse> {
+  const path = params.path;
+  const url = `${API_BASE}/${path.join('/')}`;
+
+  console.log("🔗 URL enviada para DELETE no backend:", url);
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': token,
+      'Content-Type': req.headers.get('content-type') || '',
+    },
+  });
+
+  const data = await response.text();
+  return new NextResponse(data, { status: response.status });
+}
