@@ -302,8 +302,8 @@ export default function Dashboard() {
         }}
         onReload={reloadData}
         expense={editingExpense}
+        selectedDate={calendarDate}
       />
-
       <ConfirmDeleteDialog
         open={isConfirmDeleteOpen}
         onCancel={() => {

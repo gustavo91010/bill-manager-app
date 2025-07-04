@@ -54,9 +54,16 @@ type ExpenseDialogProps = {
     amount: number
     dueDate?: string
   } | null
+  selectedDate?: Date
 }
 
-export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: ExpenseDialogProps) {
+export function AddExpenseDialog({
+  open,
+  onOpenChange,
+  onReload,
+  expense,
+  selectedDate
+}: ExpenseDialogProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const isEditing = !!expense
@@ -70,21 +77,28 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
     },
   })
 
+  const parseDate = (dateStr: string) => {
+    if (!dateStr) return undefined
+    const parts = dateStr.split("-")
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
+  }
   useEffect(() => {
+    console.log('expense',expense)
     if (expense && open) {
+      console.log(expense.dueDate)
       form.reset({
         description: expense.name,
         amount: expense.amount,
-        dueDate: expense.dueDate ? new Date(expense.dueDate) : undefined,
+        dueDate: expense.dueDate ? parseDate(expense.dueDate) : selectedDate,
       })
     } else if (!expense && open) {
       form.reset({
         description: "",
         amount: undefined,
-        dueDate: undefined,
+        dueDate: selectedDate,
       })
     }
-  }, [expense, open, form])
+  }, [expense, open, form, selectedDate])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -100,14 +114,12 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
         toast({
           title: "Atualizando despesa",
           description: `Atualizando a despesa: ${formattedValues.description}`,
-          variant: "default",
         })
         await updateExpense(expense.id, formattedValues)
       } else {
         toast({
           title: "Criando nova despesa",
           description: `Criando a despesa: ${formattedValues.description}`,
-          variant: "default",
         })
         await createExpense(formattedValues)
       }
@@ -123,7 +135,7 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
 
       form.reset()
       onOpenChange(false)
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao salvar a despesa. Tente novamente.",
@@ -144,8 +156,7 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
           <DialogDescription>
             {isEditing
               ? "Altere os detalhes da despesa."
-              : "Insira os detalhes da sua nova despesa."
-            }
+              : "Insira os detalhes da sua nova despesa."}
           </DialogDescription>
         </DialogHeader>
 
@@ -194,7 +205,7 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Data de Vencimento</FormLabel>
-                  <Popover modal={true}>
+                  <Popover modal>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -214,12 +225,7 @@ export function AddExpenseDialog({ open, onOpenChange, onReload, expense }: Expe
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent
-                      className="w-auto p-0 z-[9999]"
-                      align="start"
-                      side="bottom"
-                      sideOffset={4}
-                    >
+                    <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={4}>
                       <Calendar
                         mode="single"
                         selected={field.value}

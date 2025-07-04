@@ -77,7 +77,7 @@ export async function health(): Promise<void> {
 }
 
 export async function updateExpense(id: number, expense: ExpensePayload): Promise<Expense> {
-
+console.log('valor que envio no update', expense)
   const response = await fetch(`/api/proxy/payment/${id}`, {
     method: "PUT",
     headers: {
@@ -90,6 +90,7 @@ export async function updateExpense(id: number, expense: ExpensePayload): Promis
     const error = await response.json();
     throw new Error(error.message || "Erro ao atualizar despesa");
   }
+  console.log('valor que recebo:', response.json)
   return response.json();
 }
 
