@@ -1,0 +1,12 @@
+services:
+  app:
+    container_name: bill-manager-app
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    command: pnpm start

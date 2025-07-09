@@ -5,7 +5,8 @@ import { Sumary } from "@/app/api/types/sumary";
 import { ExpensePayload } from "@/app/api/types/expensePayload";
 
 // API configuration
-export const ACCESS_TOKEN = process.env.NEXT_PUBLIC_API_BASE_URL || "ae3cbe27-cb95-40b2-b940-8d5624870101"
+export const ACCESS_TOKEN = process.env.NEXT_PUBLIC_API_BASE_URL || "70451499-1624-4375-a534-8ae14dbf822a"
+// export const ACCESS_TOKEN = process.env.NEXT_PUBLIC_API_BASE_URL || "ae3cbe27-cb95-40b2-b940-8d5624870101"
 
 // Types
 export interface Expense {
@@ -77,7 +78,7 @@ export async function health(): Promise<void> {
 }
 
 export async function updateExpense(id: number, expense: ExpensePayload): Promise<Expense> {
-console.log('valor que envio no update', expense)
+  console.log('valor que envio no update', expense)
   const response = await fetch(`/api/proxy/payment/${id}`, {
     method: "PUT",
     headers: {
