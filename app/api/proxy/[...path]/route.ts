@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+const APP_BASE = 'http://107.23.71.21:8082'
 const API_BASE = 'http://3.229.225.73:8183'
-const token = process.env.NEXT_PUBLIC_API_TOKEN!
 
 async function fetchWithHandling(url: string, options: RequestInit) {
+  // console.log('Enviando requisição para:', url)
+  // console.log('Headers:', options.headers)
   try {
     const response = await fetch(url, options)
     if (!response.ok) {
@@ -11,6 +13,7 @@ async function fetchWithHandling(url: string, options: RequestInit) {
       return new NextResponse(text, { status: response.status })
     }
     const data = await response.json()
+    // console.log("data", data)
     return NextResponse.json(data)
   } catch (error) {
     console.error('Erro ao acessar API externa:', error)
@@ -26,7 +29,11 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const path = (await params).path
-  const url = `${API_BASE}/${path.join('/')}${req.nextUrl.search}`
+  const base = path.includes('users') ? APP_BASE : API_BASE;
+  const url = `${base}/${path.join('/')}${req.nextUrl.search}`;
+  // const url = `${API_BASE}/${path.join('/')}${req.nextUrl.search}`
+
+  const token = req.headers.get('Authorization') || ''
 
   return fetchWithHandling(url, {
     method: 'GET',
@@ -42,6 +49,8 @@ export async function POST(req: NextRequest) {
   const path = pathname.replace('/api/proxy/', '')
   const body = await req.text()
   const url = `${API_BASE}/${path}`
+
+  const token = req.headers.get('Authorization') || ''
 
   return fetchWithHandling(url, {
     method: 'POST',
@@ -61,6 +70,8 @@ export async function PUT(
   const url = `${API_BASE}/${path.join('/')}`
   const body = await req.text()
 
+  const token = req.headers.get('Authorization') || ''
+
   return fetchWithHandling(url, {
     method: 'PUT',
     headers: {
@@ -77,6 +88,8 @@ export async function DELETE(
 ) {
   const path = params.path
   const url = `${API_BASE}/${path.join('/')}`
+
+  const token = req.headers.get('Authorization') || ''
 
   return fetchWithHandling(url, {
     method: 'DELETE',

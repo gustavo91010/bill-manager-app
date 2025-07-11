@@ -83,9 +83,7 @@ export function AddExpenseDialog({
     return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
   }
   useEffect(() => {
-    console.log('expense',expense)
     if (expense && open) {
-      console.log(expense.dueDate)
       form.reset({
         description: expense.name,
         amount: expense.amount,
