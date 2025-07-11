@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-// import { Calendar, DollarSign, Home, PieChart, Settings, CheckCircle, Circle, AlertCircle } from "lucide-react"
 import { Calendar, DollarSign, Home, PieChart, Settings, CheckCircle, Circle, AlertCircle, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,6 +28,12 @@ import { AdaptedExpenses } from "@/app/api/types/payments"
 import { Sumary } from "@/app/api/types/sumary"
 
 export default function Dashboard() {
+  // Autenticação
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [isAuthenticating, setIsAuthenticating] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
+
+  // Dados dashboard
   const [expenses, setExpenses] = useState<AdaptedExpenses[]>([])
   const [sumary, setSumary] = useState<Sumary>()
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false)
@@ -43,15 +48,61 @@ export default function Dashboard() {
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
-  useEffect(() => {
-    reloadData()
-  }, [calendarDate])
+  // Campos do modal
+  const [inputToken, setInputToken] = useState("")
+  const [useTokenLogin, setUseTokenLogin] = useState(true) // só token por hora (pode adaptar para email/senha)
 
-  const reloadData = async (date: Date = calendarDate) => {
-    setSumary(await getSumary(date))
-    setExpenses(await getPayments(date))
+  useEffect(() => {
+    // Tenta pegar token do localStorage ao montar
+    const token = localStorage.getItem("accessToken")
+    if (token) {
+      validateToken(token)
+      setAccessToken(token)
+    } else {
+      setIsAuthenticating(false)
+    }
+  }, [])
+
+  async function validateToken(token: string) {
+    setIsAuthenticating(true)
+    setAuthError(null)
+    console.log('accesstoken no começo: ', token)
+
+    try {
+      const res = await fetch("/api/proxy/users/permission", {
+        headers: {
+          Authorization: token,
+        },
+      })
+      if (!res.ok) throw new Error("Token inválido")
+      setAccessToken(token)
+      localStorage.setItem("accessToken", token)
+    } catch {
+      setAuthError("Token inválido ou expirado")
+      setAccessToken(null)
+      localStorage.removeItem("accessToken")
+    } finally {
+      setIsAuthenticating(false)
+    }
   }
 
+  async function onSubmitToken() {
+    if (!inputToken.trim()) return
+    await validateToken(inputToken.trim())
+  }
+
+  // Funções dashboard que usam o token
+  const reloadData = async (date: Date = calendarDate) => {
+    if (!accessToken) return
+    setSumary(await getSumary(date, accessToken))
+    setExpenses(await getPayments(date, accessToken))
+  }
+
+  useEffect(() => {
+    if (accessToken) reloadData()
+  }, [calendarDate, accessToken])
+
+  // Funções auxiliares
   const toggleDateExpansion = (date: string) => {
     setExpandedDates((prev) => (prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]))
   }
@@ -101,6 +152,35 @@ export default function Dashboard() {
       <span role="img" aria-label="Parcialmente pago">
         <Circle className="h-4 w-4 text-yellow-500" />
       </span>
+    )
+  }
+
+  if (isAuthenticating) {
+    return <div className="flex items-center justify-center h-screen">Validando token...</div>
+  }
+
+  if (!accessToken) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="bg-white p-8 rounded shadow-md w-96">
+          <h2 className="text-xl font-semibold mb-4">Autenticação</h2>
+
+          {authError && <p className="text-red-600 mb-4">{authError}</p>}
+
+          <label className="block mb-2 font-medium">Access Token</label>
+          <input
+            type="text"
+            value={inputToken}
+            onChange={(e) => setInputToken(e.target.value)}
+            className="w-full p-2 border rounded mb-4"
+            placeholder="Cole seu access token"
+          />
+
+          <Button className="w-full" onClick={onSubmitToken}>
+            Entrar
+          </Button>
+        </div>
+      </div>
     )
   }
 
@@ -280,7 +360,7 @@ export default function Dashboard() {
                     <CalendarWidget
                       expenses={expenses}
                       onMonthChange={async (date) => {
-                        const data = await getPayments(date)
+                        const data = await getPayments(date, accessToken)
                         setExpenses(data)
                         setCalendarDate(date)
                       }}
@@ -292,7 +372,6 @@ export default function Dashboard() {
           </main>
         </div>
       </div>
-
 
       <AddExpenseDialog
         open={isAddExpenseOpen}
@@ -312,14 +391,13 @@ export default function Dashboard() {
         }}
         onConfirm={async () => {
           if (deleteId !== null) {
-            await deleteExpense(deleteId)
+            await deleteExpense(deleteId, accessToken)
             setIsConfirmDeleteOpen(false)
             setDeleteId(null)
             await reloadData()
           }
         }}
       />
-
     </SidebarProvider>
   )
 }

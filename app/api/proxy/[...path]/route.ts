@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const API_BASE = 'http://3.229.225.73:8183'
-const token = process.env.NEXT_PUBLIC_API_TOKEN!
 
 async function fetchWithHandling(url: string, options: RequestInit) {
+  console.log('Enviando requisição para:', url)
+  console.log('Headers:', options.headers)
   try {
     const response = await fetch(url, options)
     if (!response.ok) {
@@ -27,7 +28,9 @@ export async function GET(
 ) {
   const path = (await params).path
   const url = `${API_BASE}/${path.join('/')}${req.nextUrl.search}`
-console.log(url)
+
+  const token = req.headers.get('Authorization') || ''
+
   return fetchWithHandling(url, {
     method: 'GET',
     headers: {
@@ -42,6 +45,8 @@ export async function POST(req: NextRequest) {
   const path = pathname.replace('/api/proxy/', '')
   const body = await req.text()
   const url = `${API_BASE}/${path}`
+
+  const token = req.headers.get('Authorization') || ''
 
   return fetchWithHandling(url, {
     method: 'POST',
@@ -61,6 +66,8 @@ export async function PUT(
   const url = `${API_BASE}/${path.join('/')}`
   const body = await req.text()
 
+  const token = req.headers.get('Authorization') || ''
+
   return fetchWithHandling(url, {
     method: 'PUT',
     headers: {
@@ -77,6 +84,8 @@ export async function DELETE(
 ) {
   const path = params.path
   const url = `${API_BASE}/${path.join('/')}`
+
+  const token = req.headers.get('Authorization') || ''
 
   return fetchWithHandling(url, {
     method: 'DELETE',
