@@ -66,23 +66,31 @@ export default function Dashboard() {
   async function validateToken(token: string) {
     setIsAuthenticating(true)
     setAuthError(null)
-    console.log('accesstoken no começo: ', token)
-
     try {
-      const res = await fetch("/api/proxy/users/permission", {
-        headers: {
-          Authorization: token,
-        },
-      })
-      if (!res.ok) throw new Error("Token inválido")
-      setAccessToken(token)
-      localStorage.setItem("accessToken", token)
-    } catch {
-      setAuthError("Token inválido ou expirado")
-      setAccessToken(null)
-      localStorage.removeItem("accessToken")
+      const res = await fetch("/api/proxy/users/authorization", {
+        headers: { Authorization: token },
+      });
+
+      const data = await res.json();
+      console.log("ioyipoupyph", data);
+
+      if (!res.ok) throw new Error("Token inválido");
+
+      setAccessToken(data.access_token);
+      localStorage.setItem("accessToken", data.access_token);
+      localStorage.setItem("userName", data.name);
+      localStorage.setItem("userEmail", data.email);
+      localStorage.setItem("userApplication", data.aplication);
+    } catch (err) {
+      console.error(err);
+      setAuthError("Token inválido ou expirado");
+      setAccessToken(null);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userApplication");
     } finally {
-      setIsAuthenticating(false)
+      setIsAuthenticating(false);
     }
   }
 
