@@ -27,7 +27,7 @@ export async function GET(
 ) {
   const path = (await params).path
   const url = `${API_BASE}/${path.join('/')}${req.nextUrl.search}`
-
+console.log(url)
   return fetchWithHandling(url, {
     method: 'GET',
     headers: {
