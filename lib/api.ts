@@ -10,6 +10,7 @@ export interface Expense {
   amount: number
   dueDate: string
   status: string
+  repeat?: number
 }
 
 export async function confirmPayment(expenseId: number, token: string): Promise<Expense> {
@@ -79,7 +80,8 @@ export async function updateExpense(id: number, expense: ExpensePayload, token: 
 }
 
 export async function createExpense(expense: ExpensePayload, token: string): Promise<Expense> {
-  const response = await fetch(`/api/proxy/payment/repeat/1`, {
+  const repeat = expense.periodicity ?? 1
+  const response = await fetch(`/api/proxy/payment/repeat/${repeat}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

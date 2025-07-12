@@ -72,7 +72,6 @@ export default function Dashboard() {
       });
 
       const data = await res.json();
-      console.log("ioyipoupyph", data);
 
       if (!res.ok) throw new Error("Token inválido");
 
