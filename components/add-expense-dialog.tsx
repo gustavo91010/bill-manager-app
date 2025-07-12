@@ -33,6 +33,7 @@ const formSchema = z.object({
   amount: z.coerce.number().positive({
     message: "O valor deve ser maior que zero.",
   }),
+  periodicity: z.coerce.number().int().positive().optional(),
   dueDate: z.date({
     required_error: "A data de vencimento é obrigatória.",
   }),
@@ -41,6 +42,7 @@ const formSchema = z.object({
 type ExpensePayload = {
   description: string
   value: number
+  periodicity?: number
   due_date: string
 }
 
@@ -52,6 +54,7 @@ type ExpenseDialogProps = {
     id: number
     name: string
     amount: number
+    periodicity?: number
     dueDate?: string
   } | null
   selectedDate?: Date
@@ -73,6 +76,7 @@ export function AddExpenseDialog({
     defaultValues: {
       description: "",
       amount: undefined,
+      periodicity: undefined,
       dueDate: undefined,
     },
   })
@@ -87,12 +91,14 @@ export function AddExpenseDialog({
       form.reset({
         description: expense.name,
         amount: expense.amount,
+        periodicity: expense.periodicity,
         dueDate: expense.dueDate ? parseDate(expense.dueDate) : selectedDate,
       })
     } else if (!expense && open) {
       form.reset({
         description: "",
         amount: undefined,
+        periodicity: undefined,
         dueDate: selectedDate,
       })
     }
@@ -108,13 +114,16 @@ export function AddExpenseDialog({
         due_date: values.dueDate.toISOString().split("T")[0],
       }
 
+      if (values.periodicity) {
+        formattedValues.periodicity = values.periodicity
+      }
+
       if (isEditing) {
         toast({
           title: "Atualizando despesa",
           description: `Atualizando a despesa: ${formattedValues.description}`,
         })
         await updateExpense(expense.id, formattedValues, localStorage.getItem("accessToken") ?? "")
-        // await updateExpense(expense.id, formattedValues)
       } else {
         toast({
           title: "Criando nova despesa",
@@ -175,28 +184,53 @@ export function AddExpenseDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0,00"
-                      value={field.value ?? ""}
-                      onChange={(e) => {
-                        const value = e.target.value === "" ? undefined : Number(e.target.value)
-                        field.onChange(value)
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex gap-4 items-end">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Valor</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        value={field.value ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value === "" ? undefined : Number(e.target.value)
+                          field.onChange(value)
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="periodicity"
+                render={({ field }) => (
+                  <FormItem className="w-32">
+                    <FormLabel>Repetir? (mensal)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Ex: 12"
+                        value={field.value ?? 1}
+                        onChange={(e) => {
+                          const value = e.target.value === "" ? undefined : Number(e.target.value)
+                          field.onChange(value)
+                        }}
+                        min={1}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
