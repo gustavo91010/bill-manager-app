@@ -113,13 +113,14 @@ export function AddExpenseDialog({
           title: "Atualizando despesa",
           description: `Atualizando a despesa: ${formattedValues.description}`,
         })
-        await updateExpense(expense.id, formattedValues)
+        await updateExpense(expense.id, formattedValues, localStorage.getItem("accessToken") ?? "")
+        // await updateExpense(expense.id, formattedValues)
       } else {
         toast({
           title: "Criando nova despesa",
           description: `Criando a despesa: ${formattedValues.description}`,
         })
-        await createExpense(formattedValues)
+        await createExpense(formattedValues, localStorage.getItem("accessToken") ?? "")
       }
 
       await onReload()
