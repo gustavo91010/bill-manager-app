@@ -2,12 +2,15 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { authorizeToken, loginWithEmailAndPassword } from "@/lib/api"
+import { authorizeToken, loginWithEmailAndPassword, registerUser } from "@/lib/api"
 
 export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => void }) {
   const [emailOrToken, setEmailOrToken] = useState("")
   const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
+  const [isRegistering, setIsRegistering] = useState(false)
+
   const isEmail = emailOrToken.includes("@")
 
   const handleSubmit = async () => {
@@ -15,16 +18,25 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
 
     setLoading(true)
     try {
-      let token = ""
       let data
+      let token = ""
 
-      if (isEmail) {
+      if (isRegistering) {
+        if (!name.trim() || !password.trim() || !emailOrToken.includes("@")) {
+          alert("Preencha nome, e-mail válido (com @) e senha para registrar")
+          setLoading(false)
+          return
+        }
+        data = await registerUser({ name, email: emailOrToken, password })
+        token = data.access_token
+      } else if (isEmail) {
         data = await loginWithEmailAndPassword(emailOrToken, password)
+        token = data.access_token
       } else {
         data = await authorizeToken(emailOrToken)
+        token = data.access_token
       }
 
-      token = data.access_token
       if (token) {
         localStorage.setItem("accessToken", token)
         localStorage.setItem("userName", data.name || "")
@@ -50,22 +62,46 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
         </DialogHeader>
 
         <div className="space-y-4">
+          {isRegistering && (
+            <Input
+              placeholder="Nome"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          )}
+
           <Input
-            placeholder="Código de acesso ou E-mail"
+            placeholder="E-mail"
             value={emailOrToken}
             onChange={(e) => setEmailOrToken(e.target.value)}
           />
-          {isEmail && (
+
+          {(isRegistering || isEmail) && (
             <Input
               placeholder="Senha"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
             />
           )}
 
           <Button onClick={handleSubmit} className="w-full" disabled={loading}>
-            {loading ? "Entrando..." : "Entrar"}
+            {loading
+              ? isRegistering
+                ? "Registrando..."
+                : "Entrando..."
+              : isRegistering
+                ? "Registrar"
+                : "Entrar"}
+          </Button>
+
+          <Button
+            variant="link"
+            onClick={() => setIsRegistering(!isRegistering)}
+            className="w-full text-center"
+          >
+            {isRegistering ? "Já tem conta? Entre" : "Não tem conta? Cadastre-se"}
           </Button>
         </div>
       </DialogContent>

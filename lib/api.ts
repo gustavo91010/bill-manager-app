@@ -13,6 +13,31 @@ export interface Expense {
   repeat?: number
 }
 
+export async function registerUser(userData: {
+  name: string;
+  email: string;
+  password: string;
+}) {
+  const dataToSend = {
+    ...userData,
+    aplication: "bill-manager"
+  };
+  const response = await fetch("api/proxy/auth/signup", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(dataToSend),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Erro ao registrar usuário");
+  }
+
+  const data = await response.json();
+  return data; // objeto do usuário com access_token, aplication, roles etc
+}
 export async function loginWithToken(token: string) {
   const res = await fetch("/api/auth/token", {
     method: "POST",
@@ -37,7 +62,7 @@ export async function loginWithEmailAndPassword(email: string, password: string)
 
 
 export async function authorizeToken(token: string) {
-const res = await fetch("/api/proxy/users/authorization", {
+  const res = await fetch("/api/proxy/users/authorization", {
     headers: { Authorization: token },
   });
   if (!res.ok) throw new Error("Token inválido");
