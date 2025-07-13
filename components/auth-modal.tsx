@@ -1,26 +1,53 @@
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { authorizeToken, loginWithEmailAndPassword, registerUser } from "@/lib/api"
 
 export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => void }) {
-  const [mode, setMode] = useState<"token" | "password">("token")
-  const [email, setEmail] = useState("")
-  const [tokenOrPassword, setTokenOrPassword] = useState("")
+  const [emailOrToken, setEmailOrToken] = useState("")
+  const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [isRegistering, setIsRegistering] = useState(false)
+
+  const isEmail = emailOrToken.includes("@")
 
   const handleSubmit = async () => {
-    let token = ""
-    if (mode === "token") {
-      // chama endpoint de login por token
-      token = await loginWithToken(tokenOrPassword)
-    } else {
-      // chama endpoint de login com email + senha
-      token = await loginWithEmailAndPassword(email, tokenOrPassword)
-    }
+    if (!emailOrToken.trim()) return
 
-    if (token) {
-      localStorage.setItem("accessToken", token)
-      onAuthenticated()
+    setLoading(true)
+    try {
+      let data
+      let token = ""
+
+      if (isRegistering) {
+        if (!name.trim() || !password.trim() || !emailOrToken.includes("@")) {
+          alert("Preencha nome, e-mail válido (com @) e senha para registrar")
+          setLoading(false)
+          return
+        }
+        data = await registerUser({ name, email: emailOrToken, password })
+        token = data.access_token
+      } else if (isEmail) {
+        data = await loginWithEmailAndPassword(emailOrToken, password)
+        token = data.access_token
+      } else {
+        data = await authorizeToken(emailOrToken)
+        token = data.access_token
+      }
+
+      if (token) {
+        localStorage.setItem("accessToken", token)
+        localStorage.setItem("userName", data.name || "")
+        localStorage.setItem("userEmail", data.email || "")
+        localStorage.setItem("userApplication", data.aplication || "")
+        onAuthenticated()
+      }
+    } catch {
+      alert("Credenciais inválidas")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -28,58 +55,56 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
     <Dialog open>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Autenticação</DialogTitle>
+          <DialogTitle className="text-center text-2xl">Bill Manager</DialogTitle>
+          <DialogDescription className="text-center mb-4 text-muted-foreground">
+            Seu gestor de pagamentos
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
+        <div className="space-y-4">
+          {isRegistering && (
+            <Input
+              placeholder="Nome"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          )}
+
           <Input
             placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={mode === "token"}
-          />
-          <Input
-            placeholder={mode === "token" ? "Token" : "Senha"}
-            type={mode === "token" ? "text" : "password"}
-            value={tokenOrPassword}
-            onChange={(e) => setTokenOrPassword(e.target.value)}
+            value={emailOrToken}
+            onChange={(e) => setEmailOrToken(e.target.value)}
           />
 
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Usar: </span>
-            <Button variant="link" size="sm" onClick={() => setMode(mode === "token" ? "password" : "token")}>
-              {mode === "token" ? "E-mail + Senha" : "Token"}
-            </Button>
-          </div>
+          {(isRegistering || isEmail) && (
+            <Input
+              placeholder="Senha"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+          )}
 
-          <Button onClick={handleSubmit} className="w-full">
-            Entrar
+          <Button onClick={handleSubmit} className="w-full" disabled={loading}>
+            {loading
+              ? isRegistering
+                ? "Registrando..."
+                : "Entrando..."
+              : isRegistering
+                ? "Registrar"
+                : "Entrar"}
+          </Button>
+
+          <Button
+            variant="link"
+            onClick={() => setIsRegistering(!isRegistering)}
+            className="w-full text-center"
+          >
+            {isRegistering ? "Já tem conta? Entre" : "Não tem conta? Cadastre-se"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   )
 }
-
-async function loginWithToken(token: string) {
-  const res = await fetch("/api/auth/token", {
-    method: "POST",
-    body: JSON.stringify({ token }),
-    headers: { "Content-Type": "application/json" },
-  })
-  if (!res.ok) return ""
-  const { accessToken } = await res.json()
-  return accessToken
-}
-
-async function loginWithEmailAndPassword(email: string, password: string) {
-  const res = await fetch("/api/auth/email", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-    headers: { "Content-Type": "application/json" },
-  })
-  if (!res.ok) return ""
-  const { accessToken } = await res.json()
-  return accessToken
-}
-

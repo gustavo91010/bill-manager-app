@@ -13,6 +13,63 @@ export interface Expense {
   repeat?: number
 }
 
+export async function registerUser(userData: {
+  name: string;
+  email: string;
+  password: string;
+}) {
+  const dataToSend = {
+    ...userData,
+    aplication: "bill-manager"
+  };
+  const response = await fetch("api/proxy/auth/signup", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(dataToSend),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Erro ao registrar usuário");
+  }
+
+  const data = await response.json();
+  return data; // objeto do usuário com access_token, aplication, roles etc
+}
+export async function loginWithToken(token: string) {
+  const res = await fetch("/api/auth/token", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+    headers: { "Content-Type": "application/json" },
+  })
+  if (!res.ok) throw new Error("Invalid token")
+  const { accessToken } = await res.json()
+  return accessToken
+}
+
+export async function loginWithEmailAndPassword(email: string, password: string) {
+  const res = await fetch("/api/proxy/auth/signin", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+    headers: { "Content-Type": "application/json" },
+  })
+  if (!res.ok) throw new Error("Invalid credentials")
+
+  return await res.json()
+}
+
+
+export async function authorizeToken(token: string) {
+  const res = await fetch("/api/proxy/users/authorization", {
+    headers: { Authorization: token },
+  });
+  if (!res.ok) throw new Error("Token inválido");
+
+  return await res.json();
+}
+
 export async function confirmPayment(expenseId: number, token: string): Promise<Expense> {
   const url = `/api/proxy/payment/confirm-payment/${expenseId}`
   const response = await fetch(url, {
