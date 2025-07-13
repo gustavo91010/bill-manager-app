@@ -19,13 +19,12 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
       let data
 
       if (isEmail) {
-        token = await loginWithEmailAndPassword(emailOrToken, password)
-        data = { access_token: token, name: "", email: emailOrToken, aplication: "" } // ou adapte se tiver dados
+        data = await loginWithEmailAndPassword(emailOrToken, password)
       } else {
         data = await authorizeToken(emailOrToken)
-        token = data.access_token
       }
 
+      token = data.access_token
       if (token) {
         localStorage.setItem("accessToken", token)
         localStorage.setItem("userName", data.name || "")
