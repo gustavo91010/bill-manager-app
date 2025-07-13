@@ -1,5 +1,6 @@
 *.tar*
 *.xz
+
 .env
 .env.local
 # Node
