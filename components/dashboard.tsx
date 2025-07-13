@@ -68,13 +68,8 @@ export default function Dashboard() {
     setIsAuthenticating(true)
     setAuthError(null)
     try {
-      //   const res = await fetch("/api/proxy/users/authorization", {
-      //     headers: { Authorization: token },
-      //   });
 
       const data = await authorizeToken(token)
-
-      // if (!res.ok) throw new Error("Token inválido");
 
       setAccessToken(data.access_token);
       localStorage.setItem("accessToken", data.access_token);
@@ -82,7 +77,6 @@ export default function Dashboard() {
       localStorage.setItem("userEmail", data.email);
       localStorage.setItem("userApplication", data.aplication);
     } catch (err) {
-      console.error(err);
       setAuthError("Token inválido ou expirado");
       setAccessToken(null);
       localStorage.removeItem("accessToken");

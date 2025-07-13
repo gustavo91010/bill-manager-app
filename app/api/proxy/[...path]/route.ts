@@ -52,7 +52,6 @@ export async function POST(req: NextRequest) {
   const body = await req.text()
   const token = req.headers.get('Authorization') || ''
 
-  console.log("vai chamara qui né? ", url)
   return fetchWithHandling(url, {
     method: 'POST',
     headers: {
