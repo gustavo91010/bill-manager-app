@@ -13,6 +13,43 @@ export interface Expense {
   repeat?: number
 }
 
+export async function loginWithToken(token: string) {
+  const res = await fetch("/api/auth/token", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+    headers: { "Content-Type": "application/json" },
+  })
+  if (!res.ok) throw new Error("Invalid token")
+  const { accessToken } = await res.json()
+  return accessToken
+}
+
+export async function loginWithEmailAndPassword(email: string, password: string) {
+  const res = await fetch("/api/auth/email", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+    headers: { "Content-Type": "application/json" },
+  })
+  if (!res.ok) throw new Error("Invalid credentials")
+  const { accessToken } = await res.json()
+  return accessToken
+}
+
+
+export async function authorizeToken(token: string) {
+  console.log("token", token)
+  console.log("token",token)
+
+  const res = await fetch("/api/proxy/users/authorization", {
+    headers: { Authorization: token },
+  });
+  if (!res.ok) throw new Error("Token inválido");
+
+  const data = await res.json();
+
+  return data; // retorna os dados do usuário e token
+}
+
 export async function confirmPayment(expenseId: number, token: string): Promise<Expense> {
   const url = `/api/proxy/payment/confirm-payment/${expenseId}`
   const response = await fetch(url, {

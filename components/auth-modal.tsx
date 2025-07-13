@@ -1,26 +1,42 @@
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { authorizeToken, loginWithEmailAndPassword } from "@/lib/api"
 
 export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => void }) {
-  const [mode, setMode] = useState<"token" | "password">("token")
-  const [email, setEmail] = useState("")
-  const [tokenOrPassword, setTokenOrPassword] = useState("")
+  const [emailOrToken, setEmailOrToken] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const isEmail = emailOrToken.includes("@")
 
   const handleSubmit = async () => {
-    let token = ""
-    if (mode === "token") {
-      // chama endpoint de login por token
-      token = await loginWithToken(tokenOrPassword)
-    } else {
-      // chama endpoint de login com email + senha
-      token = await loginWithEmailAndPassword(email, tokenOrPassword)
-    }
+    if (!emailOrToken.trim()) return
 
-    if (token) {
-      localStorage.setItem("accessToken", token)
-      onAuthenticated()
+    setLoading(true)
+    try {
+      let token = ""
+      let data
+
+      if (isEmail) {
+        token = await loginWithEmailAndPassword(emailOrToken, password)
+        data = { access_token: token, name: "", email: emailOrToken, aplication: "" } // ou adapte se tiver dados
+      } else {
+        data = await authorizeToken(emailOrToken)
+        token = data.access_token
+      }
+
+      if (token) {
+        localStorage.setItem("accessToken", token)
+        localStorage.setItem("userName", data.name || "")
+        localStorage.setItem("userEmail", data.email || "")
+        localStorage.setItem("userApplication", data.aplication || "")
+        onAuthenticated()
+      }
+    } catch {
+      alert("Credenciais inválidas")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -28,58 +44,32 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
     <Dialog open>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Autenticação</DialogTitle>
+          <DialogTitle className="text-center text-2xl">Bill Manager</DialogTitle>
+          <DialogDescription className="text-center mb-4 text-muted-foreground">
+            Seu gestor de pagamentos
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           <Input
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={mode === "token"}
+            placeholder="Código de acesso ou E-mail"
+            value={emailOrToken}
+            onChange={(e) => setEmailOrToken(e.target.value)}
           />
-          <Input
-            placeholder={mode === "token" ? "Token" : "Senha"}
-            type={mode === "token" ? "text" : "password"}
-            value={tokenOrPassword}
-            onChange={(e) => setTokenOrPassword(e.target.value)}
-          />
+          {isEmail && (
+            <Input
+              placeholder="Senha"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          )}
 
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Usar: </span>
-            <Button variant="link" size="sm" onClick={() => setMode(mode === "token" ? "password" : "token")}>
-              {mode === "token" ? "E-mail + Senha" : "Token"}
-            </Button>
-          </div>
-
-          <Button onClick={handleSubmit} className="w-full">
-            Entrar
+          <Button onClick={handleSubmit} className="w-full" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   )
 }
-
-async function loginWithToken(token: string) {
-  const res = await fetch("/api/auth/token", {
-    method: "POST",
-    body: JSON.stringify({ token }),
-    headers: { "Content-Type": "application/json" },
-  })
-  if (!res.ok) return ""
-  const { accessToken } = await res.json()
-  return accessToken
-}
-
-async function loginWithEmailAndPassword(email: string, password: string) {
-  const res = await fetch("/api/auth/email", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-    headers: { "Content-Type": "application/json" },
-  })
-  if (!res.ok) return ""
-  const { accessToken } = await res.json()
-  return accessToken
-}
-

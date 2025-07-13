@@ -1,10 +1,11 @@
 "use client"
 
+import AuthModal from "./auth-modal"
 import { useEffect, useState } from "react"
 import { Calendar, DollarSign, Home, PieChart, Settings, CheckCircle, Circle, AlertCircle, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { deleteExpense, getPayments, getSumary } from "@/lib/api"
+import { authorizeToken, deleteExpense, getPayments, getSumary } from "@/lib/api"
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog"
 import {
   Sidebar,
@@ -67,13 +68,13 @@ export default function Dashboard() {
     setIsAuthenticating(true)
     setAuthError(null)
     try {
-      const res = await fetch("/api/proxy/users/authorization", {
-        headers: { Authorization: token },
-      });
+      //   const res = await fetch("/api/proxy/users/authorization", {
+      //     headers: { Authorization: token },
+      //   });
 
-      const data = await res.json();
+      const data = await authorizeToken(token)
 
-      if (!res.ok) throw new Error("Token inválido");
+      // if (!res.ok) throw new Error("Token inválido");
 
       setAccessToken(data.access_token);
       localStorage.setItem("accessToken", data.access_token);
@@ -167,28 +168,7 @@ export default function Dashboard() {
   }
 
   if (!accessToken) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="bg-white p-8 rounded shadow-md w-96">
-          <h2 className="text-xl font-semibold mb-4">Autenticação</h2>
-
-          {authError && <p className="text-red-600 mb-4">{authError}</p>}
-
-          <label className="block mb-2 font-medium">Access Token</label>
-          <input
-            type="text"
-            value={inputToken}
-            onChange={(e) => setInputToken(e.target.value)}
-            className="w-full p-2 border rounded mb-4"
-            placeholder="Cole seu access token"
-          />
-
-          <Button className="w-full" onClick={onSubmitToken}>
-            Entrar
-          </Button>
-        </div>
-      </div>
-    )
+    return <AuthModal onAuthenticated={() => window.location.reload()} />
   }
 
   return (
