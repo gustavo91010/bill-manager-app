@@ -61,12 +61,39 @@ export async function POST(req: NextRequest) {
     body,
   })
 }
+// export async function PUT(
+//   req: NextRequest,
+//   { params }: { params: Promise<{ path: string[] }> }
+// ) {
+//   const { path } = await params
+
+//   const base = getBaseUrl(path)
+//   const url = `${base}/${path.join('/')}`
+//   console.log("url", url)
+//   const body = await req.text()
+//   const token = req.headers.get('Authorization') || ''
+//   console.log("tken", token)
+//   return fetchWithHandling(url, {
+//     method: 'PUT',
+//     headers: {
+//       'Content-Type': req.headers.get('content-type') || '',
+//       'Authorization': token,
+//     },
+//     body,
+//   })
+// }
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  const path = params.path
+  const { path } = await params
+
+  // { params }: { params: { path: string[] } }
+  // ) {
+  // console.log("arags", params)
+  // // const path = params.path
+  // const path = params.path
   const base = getBaseUrl(path)
   const url = `${base}/${path.join('/')}`
   const body = await req.text()
@@ -84,9 +111,9 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  const path = params.path
+  const { path } = await params
   const base = getBaseUrl(path)
   const url = `${base}/${path.join('/')}`
   const token = req.headers.get('Authorization') || ''

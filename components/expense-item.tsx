@@ -52,7 +52,10 @@ export function ExpenseItem({ expense, onPaymentConfirmed, onEdit, onDelete }: E
         <Button
           onClick={async () => {
             try {
-              const response = await confirmPayment(localExpense.id)
+              const token = localStorage.getItem('token') ?? ''
+
+              // await updateExpense(expense.id, formattedValues, localStorage.getItem("accessToken") ?? "")
+              const response = await confirmPayment(localExpense.id, localStorage.getItem("accessToken") ?? "")
               setLocalExpense({ ...localExpense, status: response.status })
               onPaymentConfirmed()
             } catch (error) {

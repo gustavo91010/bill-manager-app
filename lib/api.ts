@@ -71,7 +71,7 @@ export async function authorizeToken(token: string) {
 }
 
 export async function confirmPayment(expenseId: number, token: string): Promise<Expense> {
-  const url = `/api/proxy/payment/confirm-payment/${expenseId}`
+  const url = `/api/proxy/payment/confirm-paymeny/${expenseId}`
   const response = await fetch(url, {
     method: "PUT",
     headers: {
