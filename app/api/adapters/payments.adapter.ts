@@ -4,7 +4,11 @@ export function convertPayments(response: any): AdaptedExpenses[] {
   const grouped: Record<string, Expense[]> = {};
 
   response.payments.forEach((p: any) => {
-    const date = new Date(p.due_date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+    // Cria a data e ajusta para o fuso horário local para evitar problemas de UTC
+    const dateObj = new Date(p.due_date);
+    const adjustedDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000);
+    const date = adjustedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+    
     if (!grouped[date]) grouped[date] = [];
 
     grouped[date].push({

@@ -25,8 +25,8 @@ import { AddExpenseDialog } from "./add-expense-dialog"
 import { CalendarWidget } from "./calendar-widget"
 import { ExpenseItem } from "./expense-item"
 import { UserNav } from "./user-nav"
-import { AdaptedExpenses } from "@/app/api/types/payments"
-import { Sumary } from "@/app/api/types/sumary"
+import type { AdaptedExpenses } from "@/app/api/types/payments"
+import type { Sumary } from "@/app/api/types/sumary"
 
 export default function Dashboard() {
   // Autenticação
@@ -51,7 +51,7 @@ export default function Dashboard() {
 
   // Campos do modal
   const [inputToken, setInputToken] = useState("")
-  const [useTokenLogin, setUseTokenLogin] = useState(true) // só token por hora (pode adaptar para email/senha)
+  const [useTokenLogin, setUseTokenLogin] = useState(true)
 
   useEffect(() => {
     // Tenta pegar token do localStorage ao montar
@@ -68,23 +68,21 @@ export default function Dashboard() {
     setIsAuthenticating(true)
     setAuthError(null)
     try {
-
       const data = await authorizeToken(token)
-
-      setAccessToken(data.access_token);
-      localStorage.setItem("accessToken", data.access_token);
-      localStorage.setItem("userName", data.name);
-      localStorage.setItem("userEmail", data.email);
-      localStorage.setItem("userApplication", data.aplication);
+      setAccessToken(data.access_token)
+      localStorage.setItem("accessToken", data.access_token)
+      localStorage.setItem("userName", data.name)
+      localStorage.setItem("userEmail", data.email)
+      localStorage.setItem("userApplication", data.aplication)
     } catch (err) {
-      setAuthError("Token inválido ou expirado");
-      setAccessToken(null);
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("userApplication");
+      setAuthError("Token inválido ou expirado")
+      setAccessToken(null)
+      localStorage.removeItem("accessToken")
+      localStorage.removeItem("userName")
+      localStorage.removeItem("userEmail")
+      localStorage.removeItem("userApplication")
     } finally {
-      setIsAuthenticating(false);
+      setIsAuthenticating(false)
     }
   }
 
@@ -97,7 +95,8 @@ export default function Dashboard() {
   const reloadData = async (date: Date = calendarDate) => {
     if (!accessToken) return
     setSumary(await getSumary(date, accessToken))
-    setExpenses(await getPayments(date, accessToken))
+    const paymentsData = await getPayments(date, accessToken)
+    setExpenses(paymentsData)
   }
 
   useEffect(() => {
@@ -122,38 +121,44 @@ export default function Dashboard() {
 
     if (allPaid)
       return (
-        <span role="img" aria-label="Tudo pago">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-        </span>
+        <div className="flex items-center gap-1 text-green-600">
+          <CheckCircle className="h-4 w-4" />
+          <span className="text-xs font-medium">Pago</span>
+        </div>
       )
     if (anyOverdue)
       return (
-        <span role="img" aria-label="Contas vencidas">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-        </span>
+        <div className="flex items-center gap-1 text-red-600">
+          <AlertCircle className="h-4 w-4" />
+          <span className="text-xs font-medium">Vencido</span>
+        </div>
       )
     if (anyDueToday)
       return (
-        <span role="img" aria-label="Contas vencendo hoje">
-          <Clock className="h-4 w-4 text-orange-600" />
-        </span>
+        <div className="flex items-center gap-1 text-orange-600">
+          <Clock className="h-4 w-4" />
+          <span className="text-xs font-medium">Vencendo Hoje</span>
+        </div>
       )
     if (anyDueSoon)
       return (
-        <span role="img" aria-label="Contas a vencer">
-          <Circle className="h-4 w-4 text-blue-600" />
-        </span>
+        <div className="flex items-center gap-1 text-blue-600">
+          <Circle className="h-4 w-4" />
+          <span className="text-xs font-medium">A Vencer</span>
+        </div>
       )
     if (nonePaid)
       return (
-        <span role="img" aria-label="Nada pago">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-        </span>
+        <div className="flex items-center gap-1 text-red-600">
+          <AlertCircle className="h-4 w-4" />
+          <span className="text-xs font-medium">Não Pago</span>
+        </div>
       )
     return (
-      <span role="img" aria-label="Parcialmente pago">
-        <Circle className="h-4 w-4 text-yellow-500" />
-      </span>
+      <div className="flex items-center gap-1 text-yellow-500">
+        <Circle className="h-4 w-4" />
+        <span className="text-xs font-medium">Parcial</span>
+      </div>
     )
   }
 
@@ -285,7 +290,6 @@ export default function Dashboard() {
                     Adicionar Nova Despesa
                   </Button>
                 </div>
-
                 <div className="space-y-4">
                   {expenses.map((dateGroup) => (
                     <Card key={dateGroup.date} className="border-gray-200">
@@ -296,7 +300,8 @@ export default function Dashboard() {
                             {getDayStatusIcon(dateGroup.expenses)}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {dateGroup.expenses.length} itens · R$ {dateGroup.expenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}
+                            {dateGroup.expenses.length} itens · R${" "}
+                            {dateGroup.expenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}
                           </div>
                         </div>
                       </CardHeader>
@@ -364,6 +369,7 @@ export default function Dashboard() {
         expense={editingExpense}
         selectedDate={calendarDate}
       />
+
       <ConfirmDeleteDialog
         open={isConfirmDeleteOpen}
         onCancel={() => {
