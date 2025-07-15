@@ -111,7 +111,7 @@ export function AddExpenseDialog({
       const formattedValues: ExpensePayload = {
         description: values.description,
         value: values.amount,
-        due_date: values.dueDate.toISOString().split("T")[0],
+        due_date: format(values.dueDate, "yyyy-MM-dd"),
       }
 
       if (values.periodicity) {
