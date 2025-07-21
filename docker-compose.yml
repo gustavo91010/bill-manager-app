@@ -7,6 +7,6 @@ services:
     volumes:
       - ./:/app
       - /app/node_modules
-    env_file:
-      - .env
-    command: pnpm start
+    env_file: .env
+    command: ["pnpm", "start"]
+    restart: always
