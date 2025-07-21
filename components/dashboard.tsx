@@ -162,10 +162,6 @@ export default function Dashboard() {
     )
   }
 
-  if (isAuthenticating) {
-    return <div className="flex items-center justify-center h-screen">Validando token...</div>
-  }
-
   if (!accessToken) {
     return <AuthModal onAuthenticated={() => window.location.reload()} />
   }

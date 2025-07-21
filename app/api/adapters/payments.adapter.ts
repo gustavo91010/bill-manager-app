@@ -11,12 +11,40 @@ export function convertPayments(response: any): AdaptedExpenses[] {
     
     if (!grouped[date]) grouped[date] = [];
 
+    const getDisplayStatus = (status: string): string => {
+      switch (status.toLowerCase()) {
+        case 'paid':
+        case 'pago':
+          return 'Pago';
+        case 'overdue':
+        case 'vencido':
+          return 'Vencido';
+        case 'due_soon':
+        case 'a_vencer':
+          return 'A Vencer';
+        case 'due_today':
+        case 'vencendo_hoje':
+          return 'Vencendo Hoje';
+        case 'pending':
+        case 'pendente':
+          return 'Pendente';
+        case 'cancelled':
+        case 'cancelado':
+          return 'Cancelado';
+        default:
+          return status
+            .toLowerCase()
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+      }
+    };
+
     grouped[date].push({
       id: p.id,
       name: p.description || 'Sem descrição',
       amount: p.value,
-      category: 'Sem categoria',
-      status: p.status.toLowerCase(),
+      category: p.category || 'Sem categoria',
+      status: getDisplayStatus(p.status),
     });
   });
 
