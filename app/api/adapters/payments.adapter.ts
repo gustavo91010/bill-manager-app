@@ -5,10 +5,11 @@ export function convertPayments(response: any): AdaptedExpenses[] {
 
   response.payments.forEach((p: any) => {
     // Cria a data e ajusta para o fuso horário local para evitar problemas de UTC
-    const dateObj = new Date(p.due_date);
+    // const dateObj = new Date(p.due_date);
+    const dateObj = new Date(p.dueDate);
     const adjustedDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000);
     const date = adjustedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
-    
+
     if (!grouped[date]) grouped[date] = [];
 
     const getDisplayStatus = (status: string): string => {
