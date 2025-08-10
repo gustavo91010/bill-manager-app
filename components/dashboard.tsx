@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Calendar, DollarSign, Home, PieChart, Settings, CheckCircle, Circle, AlertCircle, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { authorizeToken, deleteExpense, getPayments, getSumary } from "@/lib/api"
+import { authorizeToken, deleteExpense, getCategory, getPayments, getSumary } from "@/lib/api"
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog"
 import {
   Sidebar,
@@ -25,7 +25,7 @@ import { AddExpenseDialog } from "./add-expense-dialog"
 import { CalendarWidget } from "./calendar-widget"
 import { ExpenseItem } from "./expense-item"
 import { UserNav } from "./user-nav"
-import type { AdaptedExpenses } from "@/app/api/types/payments"
+import type { AdaptedExpenses, CategoryExpense } from "@/app/api/types/payments"
 import type { Sumary } from "@/app/api/types/sumary"
 
 export default function Dashboard() {
@@ -36,13 +36,16 @@ export default function Dashboard() {
 
   // Dados dashboard
   const [expenses, setExpenses] = useState<AdaptedExpenses[]>([])
+  const [categories, setCategories] = useState<CategoryExpense[]>([])
   const [sumary, setSumary] = useState<Sumary>()
+  const [refreshKey, setRefreshKey] = useState(0) // Para forçar re-render
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<{
     id: number
     name: string
     amount: number
-    dueDate?: string
+    dueDate?: string,
+    category?: string
   } | null>(null)
   const [expandedDates, setExpandedDates] = useState<string[]>(["20 de Maio"])
   const [calendarDate, setCalendarDate] = useState<Date>(new Date())
@@ -94,9 +97,36 @@ export default function Dashboard() {
   // Funções dashboard que usam o token
   const reloadData = async (date: Date = calendarDate) => {
     if (!accessToken) return
-    setSumary(await getSumary(date, accessToken))
-    const paymentsData = await getPayments(date, accessToken)
-    setExpenses(paymentsData)
+    try {
+      console.log("Recarregando dados...", { date, accessToken: !!accessToken })
+      
+      // Força limpeza do estado antes de atualizar
+      setExpenses([])
+      setSumary(undefined)
+      
+      // Força atualização do sumário
+      const newSumary = await getSumary(date, accessToken)
+      setSumary(newSumary)
+      
+      // Força atualização dos pagamentos
+      const paymentsData = await getPayments(date, accessToken)
+      setExpenses([...paymentsData]) // Força novo array
+      
+      // Atualiza categorias
+      const categories = await getCategory(accessToken)
+      setCategories([...categories]) // Força novo array
+      
+      // Força re-renderização
+      setRefreshKey(prev => prev + 1)
+      
+      console.log("Dados recarregados com sucesso", { 
+        expenses: paymentsData.length, 
+        sumary: newSumary,
+        categories: categories.length 
+      })
+    } catch (error) {
+      console.error("Erro ao recarregar dados:", error)
+    }
   }
 
   useEffect(() => {
@@ -288,7 +318,7 @@ export default function Dashboard() {
                 </div>
                 <div className="space-y-4">
                   {expenses.map((dateGroup) => (
-                    <Card key={dateGroup.date} className="border-gray-200">
+                    <Card key={`${dateGroup.date}-${refreshKey}`} className="border-gray-200">
                       <CardHeader className="cursor-pointer py-3" onClick={() => toggleDateExpansion(dateGroup.date)}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -306,7 +336,7 @@ export default function Dashboard() {
                           <div className="space-y-2">
                             {dateGroup.expenses.map((expense) => (
                               <ExpenseItem
-                                key={expense.id}
+                                key={`${expense.id}-${refreshKey}`}
                                 expense={expense}
                                 onPaymentConfirmed={reloadData}
                                 onEdit={(expense) => {
@@ -315,6 +345,7 @@ export default function Dashboard() {
                                     name: expense.name,
                                     amount: expense.amount,
                                     dueDate: expense.dueDate,
+                                    category: expense.category.name
                                   })
                                   setIsAddExpenseOpen(true)
                                 }}
@@ -359,11 +390,15 @@ export default function Dashboard() {
         open={isAddExpenseOpen}
         onOpenChange={(open) => {
           setIsAddExpenseOpen(open)
-          if (!open) setEditingExpense(null)
+          // Só limpa o editingExpense quando o modal fecha
+          if (!open) {
+            setTimeout(() => setEditingExpense(null), 100)
+          }
         }}
         onReload={reloadData}
         expense={editingExpense}
         selectedDate={calendarDate}
+        categories={categories}
       />
 
       <ConfirmDeleteDialog

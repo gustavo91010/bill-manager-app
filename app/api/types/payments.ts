@@ -11,3 +11,7 @@ export interface AdaptedExpenses {
   expenses: Expense[];
 }
 
+export interface CategoryExpense {
+  id: number;
+  name: string;
+}

@@ -1,5 +1,5 @@
 import { format, startOfMonth, endOfMonth } from "date-fns"
-import { AdaptedExpenses } from "@/app/api/types/payments"
+import { AdaptedExpenses, CategoryExpense } from "@/app/api/types/payments"
 import { convertPayments } from "@/app/api/adapters/payments.adapter"
 import { Sumary } from "@/app/api/types/sumary"
 import { ExpensePayload } from "@/app/api/types/expensePayload"
@@ -109,6 +109,18 @@ export async function getPayments(date: Date, token: string): Promise<AdaptedExp
   if (!res.ok) throw new Error("Erro ao buscar pagamentos")
   const json = await res.json()
   return convertPayments(json)
+}
+
+export async function getCategory(token: string): Promise<CategoryExpense[]> {
+  
+  const url = `/api/proxy/category`
+
+  const res = await fetch(url, {
+    headers: { Authorization: token },
+  })
+  if (!res.ok) throw new Error("Erro ao buscar categorias")
+  const json = await res.json()
+  return json as CategoryExpense[]
 }
 
 export async function health(token: string): Promise<void> {
