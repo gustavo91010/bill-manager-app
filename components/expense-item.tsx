@@ -11,12 +11,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+type CategoryExpense = {
+  id: number
+  name: string
+}
+
 type ExpenseItemProps = {
   expense: {
     id: number
     name: string
     amount: number
-    category: string
+    category: string | CategoryExpense
     status: string
   }
   onPaymentConfirmed: () => void
@@ -26,6 +31,13 @@ type ExpenseItemProps = {
 
 export function ExpenseItem({ expense, onPaymentConfirmed, onEdit, onDelete }: ExpenseItemProps) {
   const [localExpense, setLocalExpense] = useState(expense)
+
+  // Função para extrair o nome da categoria
+  const getCategoryName = (category: string | CategoryExpense) => {
+    if (typeof category === "string") return category
+    if (category && typeof category === "object" && "name" in category) return category.name
+    return ""
+  }
 
   return (
     <div className="flex flex-col sm:flex-row justify-between gap-2 rounded-lg border p-3">
@@ -37,7 +49,7 @@ export function ExpenseItem({ expense, onPaymentConfirmed, onEdit, onDelete }: E
             {localExpense.name}
           </h4>
           <div className="sm:hidden text-sm text-muted-foreground truncate mt-1">
-            {localExpense.category}
+            {getCategoryName(localExpense.category)}
           </div>
         </div>
 
@@ -51,7 +63,7 @@ export function ExpenseItem({ expense, onPaymentConfirmed, onEdit, onDelete }: E
       <div className="flex items-center justify-between sm:justify-normal gap-2">
         {/* Categoria (apenas desktop) */}
         <div className="hidden sm:block text-sm text-muted-foreground truncate min-w-[100px]">
-          {localExpense.category}
+          {getCategoryName(localExpense.category)}
         </div>
 
         {/* Status e Ações */}

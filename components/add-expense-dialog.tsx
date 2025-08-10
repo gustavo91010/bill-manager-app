@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { CalendarIcon } from 'lucide-react'
+import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
-
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -18,44 +18,34 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useToast } from "@/hooks/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
+import { CalendarIcon } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 import { createExpense, updateExpense } from "@/lib/api"
+import { ExpensePayload } from "@/types"
 
 const formSchema = z.object({
-  description: z.string().min(3, {
-    message: "A descrição deve ter pelo menos 3 caracteres.",
-  }),
-  amount: z.coerce.number().positive({
-    message: "O valor deve ser maior que zero.",
-  }),
+  description: z.string().min(3, { message: "A descrição deve ter pelo menos 3 caracteres." }),
+  amount: z.coerce.number().positive({ message: "O valor deve ser maior que zero." }),
   periodicity: z.coerce.number().int().positive().optional(),
-  dueDate: z.date({
-    required_error: "A data de vencimento é obrigatória.",
-  }),
+  dueDate: z.date({ required_error: "A data de vencimento é obrigatória." }),
+  category: z.string().min(1, { message: "Selecione uma categoria ou adicione uma nova." }),
+  newCategory: z.string().optional()
 })
-
-type ExpensePayload = {
-  description: string
-  value: number
-  periodicity?: number
-  due_date: string
-}
 
 type ExpenseDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onReload: () => Promise<void>
+  categories: { id: number; name: string }[]
   expense?: {
     id: number
     name: string
     amount: number
     periodicity?: number
     dueDate?: string
+    category?: string
   } | null
   selectedDate?: Date
 }
@@ -65,10 +55,12 @@ export function AddExpenseDialog({
   onOpenChange,
   onReload,
   expense,
-  selectedDate
+  selectedDate,
+  categories
 }: ExpenseDialogProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAddingCategory, setIsAddingCategory] = useState(false)
   const isEditing = !!expense
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -78,14 +70,17 @@ export function AddExpenseDialog({
       amount: undefined,
       periodicity: undefined,
       dueDate: undefined,
+      category: "",
+      newCategory: ""
     },
   })
 
   const parseDate = (dateStr: string) => {
     if (!dateStr) return undefined
-    const parts = dateStr.split("-")
-    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
+    const [year, month, day] = dateStr.split("-").map(Number)
+    return new Date(year, month - 1, day)
   }
+
   useEffect(() => {
     if (expense && open) {
       form.reset({
@@ -93,62 +88,74 @@ export function AddExpenseDialog({
         amount: expense.amount,
         periodicity: expense.periodicity,
         dueDate: expense.dueDate ? parseDate(expense.dueDate) : selectedDate,
+        category: expense.category ?? "",
+        newCategory: ""
       })
+      setIsAddingCategory(false)
     } else if (!expense && open) {
       form.reset({
         description: "",
         amount: undefined,
         periodicity: undefined,
         dueDate: selectedDate,
+        category: "",
+        newCategory: ""
       })
+      setIsAddingCategory(false)
     }
-  }, [expense, open, form, selectedDate])
+  }, [expense, open, form, selectedDate, categories])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      if (values.category === "add_new") {
+        if (!values.newCategory?.trim()) {
+          toast({ title: "Erro", description: "Digite o nome da nova categoria.", variant: "destructive" })
+          return
+        }
+        if (categories.some(c => c.name.toLowerCase() === values.newCategory.toLowerCase())) {
+          toast({ title: "Erro", description: "Essa categoria já existe.", variant: "destructive" })
+          return
+        }
+      }
+
       setIsSubmitting(true)
 
-      const formattedValues: ExpensePayload = {
+      const categoryToSave = values.category === "add_new" ? values.newCategory!.trim() : values.category
+
+      const payload: ExpensePayload = {
         description: values.description,
         value: values.amount,
         due_date: format(values.dueDate, "yyyy-MM-dd"),
       }
 
+      ;(payload as any).category = categoryToSave
+
       if (values.periodicity) {
-        formattedValues.periodicity = values.periodicity
+        payload.periodicity = values.periodicity
       }
 
+      const token = localStorage.getItem("accessToken") ?? ""
       if (isEditing) {
-        toast({
-          title: "Atualizando despesa",
-          description: `Atualizando a despesa: ${formattedValues.description}`,
-        })
-        await updateExpense(expense.id, formattedValues, localStorage.getItem("accessToken") ?? "")
+        console.log("Editando despesa:", expense.id, payload)
+        await updateExpense(expense.id, payload, token)
+        console.log("Despesa editada com sucesso")
       } else {
-        toast({
-          title: "Criando nova despesa",
-          description: `Criando a despesa: ${formattedValues.description}`,
-        })
-        await createExpense(formattedValues, localStorage.getItem("accessToken") ?? "")
+        console.log("Criando nova despesa:", payload)
+        await createExpense(payload, token)
+        console.log("Despesa criada com sucesso")
       }
 
+      // Primeiro recarrega os dados
+      console.log("Chamando onReload...")
       await onReload()
-
-      toast({
-        title: isEditing ? "Despesa atualizada" : "Despesa adicionada",
-        description: isEditing
-          ? "A despesa foi atualizada com sucesso."
-          : "A despesa foi adicionada com sucesso.",
-      })
-
-      form.reset()
+      console.log("onReload concluído")
+      
+      // Depois fecha o modal e limpa o formulário
       onOpenChange(false)
+      form.reset()
+      setIsAddingCategory(false)
     } catch {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar a despesa. Tente novamente.",
-        variant: "destructive",
-      })
+      toast({ title: "Erro", description: "Ocorreu um erro ao salvar a despesa.", variant: "destructive" })
     } finally {
       setIsSubmitting(false)
     }
@@ -158,13 +165,9 @@ export function AddExpenseDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Editar Despesa" : "Adicionar Nova Despesa"}
-          </DialogTitle>
+          <DialogTitle>{isEditing ? "Editar Despesa" : "Adicionar Nova Despesa"}</DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? "Altere os detalhes da despesa."
-              : "Insira os detalhes da sua nova despesa."}
+            {isEditing ? "Altere os detalhes da despesa." : "Insira os detalhes da sua nova despesa."}
           </DialogDescription>
         </DialogHeader>
 
@@ -177,96 +180,90 @@ export function AddExpenseDialog({
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Input placeholder="Descrição da despesa" {...field} />
+                    <Input placeholder="Ex: Conta de Luz" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex gap-4 items-end">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>Valor</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={field.value ?? ""}
-                        onChange={(e) => {
-                          const value = e.target.value === "" ? undefined : Number(e.target.value)
-                          field.onChange(value)
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoria</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={(val) => {
+                      field.onChange(val)
+                      setIsAddingCategory(val === "add_new")
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="add_new">+ Adicionar nova categoria</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            {isAddingCategory && (
               <FormField
                 control={form.control}
-                name="periodicity"
+                name="newCategory"
                 render={({ field }) => (
-                  <FormItem className="w-32">
-                    <FormLabel>Repetir? (mensal)</FormLabel>
+                  <FormItem>
+                    <FormLabel>Nova Categoria</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Ex: 12"
-                        value={field.value ?? 1}
-                        onChange={(e) => {
-                          const value = e.target.value === "" ? undefined : Number(e.target.value)
-                          field.onChange(value)
-                        }}
-                        min={1}
-                      />
+                      <Input placeholder="Digite o nome da nova categoria" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Valor</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0.00" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
               name="dueDate"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem>
                   <FormLabel>Data de Vencimento</FormLabel>
-                  <Popover modal>
+                  <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                          type="button"
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP", { locale: ptBR })
-                          ) : (
-                            <span>Selecione uma data</span>
-                          )}
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}>
+                          {field.value ? format(field.value, "dd/MM/yyyy") : <span>Selecionar data</span>}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={4}>
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                        initialFocus
-                        locale={ptBR}
-                      />
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
