@@ -64,13 +64,13 @@ export async function loginWithToken(token: string) {
 }
 
 export async function loginWithEmailAndPassword(email: string, password: string) {
+  console.log("Tentando logar em:", `${API_AUTH}/auth/signin`);
   const res = await fetch(`${API_AUTH}/auth/signin`, {
     method: "POST",
     body: JSON.stringify({ email, password }),
     headers: { "Content-Type": "application/json" },
   })
   if (!res.ok) throw new Error("Invalid credentials")
-
   return await res.json()
 }
 

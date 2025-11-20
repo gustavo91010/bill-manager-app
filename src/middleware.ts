@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 const publicRoutes = [
   { path: '/login', whenAuthenticated: 'redirect' },
-  // {path: '/pricing', whenAuthenticated: 'next'}, // caso o usuario possa acessar mesmo autenticado
+  // {path: '/pricing', whenAuthenticated: 'next'}, 
 ] as const
 
 const REDIRECT_WHEN_NOT_AUTHENTICATED_ROUTE = '/login'
@@ -21,46 +21,57 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const publicRoute = publicRoutes.find(route => route.path === path)
   const authToken = request.cookies.get("token")?.value;
-  console.log('MIDDLEWARE - authToken:', authToken);
 
   // Caso: Não tem token e está numa rota pública
   if (!authToken && publicRoute) {
     return NextResponse.next()
   }
 
-  // Caso: Não tem token e rota é protegida → redireciona
+  // Caso: Não tem token e rota é protegida
   if (!authToken && !publicRoute) {
+    // 🔴 NOVA PROTEÇÃO 1: Se for POST/PUT/DELETE, retorna JSON 401 em vez de redirect
+    // Isso evita o erro 405 Method Not Allowed em produção
+    if (request.method !== 'GET') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Se for navegação normal (GET), redireciona pro Login
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = REDIRECT_WHEN_NOT_AUTHENTICATED_ROUTE
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Caso: Tem token → validar
+  // Caso: Tem token → validar se quer acessar login
   if (authToken && publicRoute && publicRoute.whenAuthenticated === 'redirect') {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/'
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Caso: Tem token → validar
+  // Caso: Tem token → validar expiração
   if (authToken) {
-    // checar se o jwt n tá expirado
-    //fazer decode da data de expiração do jwt
-    // se sim, remover cookie e redirecionar o usuario pro login
-    //aplicar uma estrátegia de refresh
     const decoded = decodeJwt(authToken);
+    
+    // Se expirou
     if (!decoded || decoded.exp * 1000 < Date.now()) {
-      // Token expirado ou inválido
+      
+      // 🔴 NOVA PROTEÇÃO 2: Se expirou durante um POST, avisa via JSON
+      if (request.method !== 'GET') {
+        const response = NextResponse.json({ message: 'Session expired' }, { status: 401 });
+        response.cookies.delete("token");
+        return response;
+      }
+
+      // Se expirou durante navegação (GET), redireciona
       const response = NextResponse.redirect(
         new URL(REDIRECT_WHEN_NOT_AUTHENTICATED_ROUTE, request.url)
       );
       response.cookies.delete("token"); // remove cookie inválido
       return response;
     }
-    // return NextResponse.next()
   }
 
-  // Caso: Está logado e acessando rota pública com `redirect`
+  // Caso: Está logado e acessando rota pública com `redirect` (Redundância da checagem acima, mas ok manter)
   if (publicRoute && publicRoute.whenAuthenticated === "redirect") {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/";
@@ -70,6 +81,7 @@ export function middleware(request: NextRequest) {
   // Caso: Token válido → segue
   return NextResponse.next()
 }
+
 export const config = {
   matcher: [
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',

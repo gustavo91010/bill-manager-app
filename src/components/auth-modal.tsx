@@ -5,7 +5,7 @@ import { Input } from "@/src/components/ui/input"
 import { Button } from "@/src/components/ui/button"
 import Image from "next/image";
 import { authorizeToken, loginWithEmailAndPassword, registerUser } from "@/src/lib/api"
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation'
 
 export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => void }) {
@@ -48,6 +48,14 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
         localStorage.setItem("userName", data.name || "");
         localStorage.setItem("userEmail", data.email || "");
 
+        Cookies.set('token', token, { 
+        expires: 7, // Expira em 7 dias
+        path: '/', // Disponível em todo o site
+        // Em produção (HTTPS), o cookie precisa ser Secure e SameSite None
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax' 
+    });
+
         await fetch("/api/set-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -61,8 +69,9 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
         alert("Erro ao autenticar: token não retornado.");
       }
 
-    } catch {
-      alert("Credenciais inválidas")
+    } catch (error:any) {
+      console.error("ERRO DETALHADO:", error);
+      alert("Ocorreu um erro: " + (error.message || error));
     } finally {
       setLoading(false)
     }
