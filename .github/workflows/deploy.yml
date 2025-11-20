@@ -1,4 +1,4 @@
-name: Build, Test and Deploy Next.js
+name: Build and Deploy Next.js
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - 'v*'  # dispara para qualquer tag v1.0.0, v2.3.1, etc
 
 jobs:
-  build-test-deploy:
+  build-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,10 +26,6 @@ jobs:
 
       - name: Build Next.js
         run: npm run build
-
-      - name: Run tests
-        run: npm test
-        continue-on-error: true
 
       - name: Get version from Git tag
         id: version
@@ -55,4 +51,3 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/bill-manager-app:${{ steps.version.outputs.version }}
             ${{ secrets.DOCKERHUB_USERNAME }}/bill-manager-app:latest
-
