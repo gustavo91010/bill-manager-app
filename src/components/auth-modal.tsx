@@ -56,11 +56,11 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
         sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax' 
     });
 
-        await fetch("/api/set-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token }),
-        });
+        // await fetch("/api/set-token", {
+        //   method: "POST",
+        //   headers: { "Content-Type": "application/json" },
+        //   body: JSON.stringify({ token }),
+        // });
 
         onAuthenticated();
 
