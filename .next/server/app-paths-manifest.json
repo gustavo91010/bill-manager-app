@@ -1,4 +1,5 @@
 {
+  "/api/proxy/[...path]/route": "app/api/proxy/[...path]/route.js",
   "/api/set-token/route": "app/api/set-token/route.js",
   "/_not-found/page": "app/_not-found/page.js",
   "/(public)/login/page": "app/(public)/login/page.js",

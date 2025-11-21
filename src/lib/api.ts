@@ -12,8 +12,8 @@ export interface Expense {
   status: string
   repeat?: number
 }
-const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH;
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+// const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH;
+// const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 // const jwtToken = localStorage.getItem('jwtToken')
 
 function getAuthHeaders() {
@@ -34,7 +34,7 @@ export async function registerUser(userData: {
     ...userData,
     aplication: "bill-manager"
   };
-  const response = await fetch(`${API_AUTH}/auth/signup`, {
+  const response = await fetch(`/api/proxy/auth/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -64,8 +64,8 @@ export async function loginWithToken(token: string) {
 }
 
 export async function loginWithEmailAndPassword(email: string, password: string) {
-  console.log("Tentando logar em:", `${API_AUTH}/auth/signin`);
-  const res = await fetch(`${API_AUTH}/auth/signin`, {
+  console.log("Tentando logar em:", `/api/proxy/auth/signin`);
+  const res = await fetch(`/api/proxy/auth/signin`, {
     method: "POST",
     body: JSON.stringify({ email, password }),
     headers: { "Content-Type": "application/json" },
@@ -76,7 +76,7 @@ export async function loginWithEmailAndPassword(email: string, password: string)
 
 
 export async function authorizeToken(token: string) {
-  const res = await fetch(`${API_AUTH}/users/authorization`, {
+  const res = await fetch(`/api/proxy/users/authorization`, {
     headers: getAuthHeaders(),
   });
   if (!res.ok) throw new Error("Token inválido");
@@ -85,7 +85,7 @@ export async function authorizeToken(token: string) {
 }
 
 export async function confirmPayment(expenseId: number, token: string): Promise<Expense> {
-  const url = `${API_BASE}/payment/confirm-paymeny/${expenseId}`
+  const url = `/api/proxy/payment/confirm-paymeny/${expenseId}`
   const jwtToken = localStorage.getItem('jwtToken') || "";
   const response = await fetch(url, {
     method: "PUT",
@@ -103,7 +103,7 @@ export async function getSumary(date: Date): Promise<Sumary> {
   const start = format(startOfMonth(date), "dd-MM-yyyy")
   const finish = format(endOfMonth(date), "dd-MM-yyyy")
   const params = new URLSearchParams({ start, finsh: finish })
-  const url = `${API_BASE}/payment/sumary?${params.toString()}`
+  const url = `/api/proxy/payment/sumary?${params.toString()}`
   const res = await fetch(url, {
     headers: getAuthHeaders(),
   })
@@ -116,7 +116,7 @@ export async function getPayments(date: Date, token: string): Promise<AdaptedExp
   const start = format(startOfMonth(date), "dd-MM-yyyy")
   const finish = format(endOfMonth(date), "dd-MM-yyyy")
   const params = new URLSearchParams({ start, finsh: finish })
-  const url = `${API_BASE}/payment?${params.toString()}`
+  const url = `/api/proxy/payment?${params.toString()}`
 
   const res = await fetch(url, {
     headers: getAuthHeaders(),
@@ -127,7 +127,7 @@ export async function getPayments(date: Date, token: string): Promise<AdaptedExp
 }
 
 export async function health(token: string): Promise<void> {
-  const url = `${API_BASE}/payment/health`
+  const url = `/api/proxy/payment/health`
   const res = await fetch(url, {
     headers: getAuthHeaders(),
   })
@@ -137,7 +137,7 @@ export async function health(token: string): Promise<void> {
 
 export async function updateExpense(id: number, expense: ExpensePayload, token: string): Promise<Expense> {
   const jwtToken = localStorage.getItem('jwtToken') || "";
-  const response = await fetch(`${API_BASE}/payment/${id}`, {
+  const response = await fetch(`/api/proxy/payment/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -155,7 +155,7 @@ export async function updateExpense(id: number, expense: ExpensePayload, token: 
 export async function createExpense(expense: ExpensePayload, token: string): Promise<Expense> {
   const jwtToken = localStorage.getItem('jwtToken') || "";
   const repeat = expense.periodicity ?? 1
-  const response = await fetch(`${API_BASE}/payment/repeat/${repeat}`, {
+  const response = await fetch(`/api/proxy/payment/repeat/${repeat}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -172,7 +172,7 @@ export async function createExpense(expense: ExpensePayload, token: string): Pro
 
 export async function deleteExpense(expenseId: number, token: string): Promise<void> {
   const jwtToken = localStorage.getItem('jwtToken') || "";
-  const url = `${API_BASE}/payment/${expenseId}`
+  const url = `/api/proxy/payment/${expenseId}`
   const response = await fetch(url, {
     method: "DELETE",
     headers: {

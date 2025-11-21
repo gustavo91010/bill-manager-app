@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH;
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const API_AUTH = process.env.API_AUTH; 
+const API_BASE = process.env.API_BASE;
 
 function getBaseUrl(path: string[]) {
   return path.some(p => p === 'users' || p === 'auth') ? API_AUTH : API_BASE;
@@ -47,6 +47,9 @@ export async function POST(req: NextRequest) {
   const { pathname } = new URL(req.url)
   const path = pathname.replace('/api/proxy/', '').split('/')
   const base = getBaseUrl(path)
+  if (!base) {
+      return NextResponse.json({ error: 'Variáveis de ambiente API_AUTH/API_BASE não configuradas no servidor' }, { status: 500 })
+  }
   const url = `${base}/${path.join('/')}`
   const body = await req.text()
   const token = req.headers.get('Authorization') || ''
