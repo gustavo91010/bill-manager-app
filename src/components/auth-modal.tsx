@@ -48,13 +48,18 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
         localStorage.setItem("userName", data.name || "");
         localStorage.setItem("userEmail", data.email || "");
 
-        Cookies.set('token', token, { 
-        expires: 7, // Expira em 7 dias
-        path: '/', // Disponível em todo o site
-        // Em produção (HTTPS), o cookie precisa ser Secure e SameSite None
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax' 
-    });
+        Cookies.set('token', token, {
+          expires: 7,
+          path: '/',
+
+          // 🔴 MUDANÇA AQUI:
+          // Em vez de confiar cegamente no NODE_ENV, confie no Protocolo do navegador.
+          // Se estiver rodando em https://... usa secure. Se for http://... não usa.
+          secure: window.location.protocol === 'https:',
+
+          // Ajuste o SameSite também para garantir
+          sameSite: 'Lax'
+        });
 
         await fetch("/api/set-token", {
           method: "POST",
@@ -69,7 +74,7 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
         alert("Erro ao autenticar: token não retornado.");
       }
 
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("ERRO DETALHADO:", error);
       alert("Ocorreu um erro: " + (error.message || error));
     } finally {
