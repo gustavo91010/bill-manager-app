@@ -45,7 +45,9 @@ export async function GET(
 
 export async function POST(req: NextRequest) {
   const { pathname } = new URL(req.url)
-  const path = pathname.replace('/api/proxy/', '').split('/')
+  const path = pathname.split('/api/proxy/')[1]?.split('/') || []
+
+  // const path = pathname.replace('/api/proxy/', '').split('/')
   const base = getBaseUrl(path)
   const url = `${base}/${path.join('/')}`
   const body = await req.text()
