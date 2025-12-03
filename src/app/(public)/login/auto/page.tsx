@@ -21,4 +21,5 @@ export default function AutoLoginPage() {
 
   return <p>Autenticando...</p>;
 }
+// curl http://localhost:3000/api/auth/callback\?token\=JWT_AQUI\&name\=Sr-lalala\&email\=email-test@lalala.com
 
