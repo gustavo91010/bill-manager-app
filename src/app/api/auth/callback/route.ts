@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const response = NextResponse.redirect(new URL("/login/auto", req.url));
 
-  response.cookies.set("jwtToken", token, {
+  response.cookies.set("token", token, {
     httpOnly: true,
     secure: true,
     sameSite: "strict",

@@ -115,7 +115,7 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
 
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => alert("Login com Google")}
+                onClick={() => { window.location.href = "https://ajudaqui-auth.duckdns.org/login/google"; }}
                 className="flex items-center justify-center gap-2 border border-gray-300 rounded-md px-4 py-2 hover:bg-gray-100 transition"
               >
                 <Image
@@ -181,7 +181,7 @@ export default function AuthModal({ onAuthenticated }: { onAuthenticated: () => 
 
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => alert("Login com Google")}
+                onClick={() => { window.location.href = "https://ajudaqui-auth.duckdns.org/login/google"; }}
                 className="flex items-center justify-center gap-2 border border-gray-300 rounded-md px-4 py-2 hover:bg-gray-100 transition"
               >
                 <img src="/google-logo.png" alt="Google" className="w-5 h-5" />
